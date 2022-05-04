@@ -1,0 +1,6 @@
+flysystem:
+    storages:
+        # Default storage (local disk)
+        default.storage:
+            adapter: "local"
+            options:
