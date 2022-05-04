@@ -17,7 +17,6 @@
     "require": {
         "php": "^8.1",
         "doctrine/orm": "^2.12",
-        "stof/doctrine-extensions-bundle": "^1.7",
         "league/flysystem-bundle": "^2.2"
     },
     "require-dev": {
