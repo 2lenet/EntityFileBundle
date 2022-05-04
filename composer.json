@@ -1,0 +1,18 @@
+{
+    "name": "2lenet/entity-file-bundle",
+    "description": "This package allows you to attach files to entities",
+    "type": "package",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "2lenet\\EntityFileBundle\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "2LE"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
