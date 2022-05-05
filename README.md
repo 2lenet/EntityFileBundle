@@ -83,19 +83,21 @@ $this->em->flush();
 
 * For some reason, I want to save my files somewhere else than data
 
-Create your own storage adapter, which is basically a copy of the default one with different directory option.
+Create your own storage adapter in `flysystem.yaml`, which is basically a copy of the default one with different directory option.
 ```yaml
-unicorn.storage:
-    adapter: "local"
-    options:
-        directory: "%kernel.project_dir%/unicorns"
-        permissions:
-            file:
-                public: 511
-                private: 511
-            dir:
-                public: 511
-                private: 511
+flysystem:
+    storages:
+        unicorn.storage:
+            adapter: "local"
+            options:
+                directory: "%kernel.project_dir%/unicorns"
+                permissions:
+                    file:
+                        public: 511
+                        private: 511
+                    dir:
+                        public: 511
+                        private: 511
 ```
 
 ### Retrieve files
