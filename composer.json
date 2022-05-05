@@ -2,7 +2,6 @@
     "name": "2lenet/entity-file-bundle",
     "type": "symfony-bundle",
     "description": "This package allows you to attach files to entities",
-    "type": "package",
     "license": "MIT",
     "autoload": {
         "psr-4": {
@@ -17,7 +16,8 @@
     "require": {
         "php": "^8.1",
         "doctrine/orm": "^2.12",
-        "league/flysystem-bundle": "^2.2"
+        "league/flysystem-bundle": "^2.2",
+        "symfony/property-access": "^5.0 || ^6.0"
     },
     "require-dev": {
         "phpstan/phpstan": "^1.6",

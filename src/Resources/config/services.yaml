@@ -7,5 +7,5 @@ services:
     Lle\EntityFileBundle\Service\EntityFileManager:
         arguments:
             - '@parameter_bag'
-            - '@doctrine.orm.entity_manager'
             - !tagged_locator { tag: 'flysystem.storage' }
+            - '@property_accessor'

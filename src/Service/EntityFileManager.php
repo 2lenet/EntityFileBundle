@@ -2,31 +2,75 @@
 
 namespace Lle\EntityFileBundle\Service;
 
-use Doctrine\ORM\EntityManagerInterface;
 use League\Flysystem\FilesystemOperator;
+use Lle\EntityFileBundle\Entity\EntityFileInterface;
 use Lle\EntityFileBundle\Exception\EntityFileException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 class EntityFileManager
 {
     public function __construct(
         private ParameterBagInterface $parameters,
-        private EntityManagerInterface $em,
         private ServiceLocator $storageLocator,
+        private PropertyAccessorInterface $propertyAccessor,
     )
     {
     }
 
     /**
+     * Create and write an EntityFile
+     *
      * @param resource|File|string $data
      */
-    public function save(string $configName, $data, string $name)/*: EntityFileInterface*/
+    public function save(string $configName, object $object, $data, string $path): EntityFileInterface
+    {
+        $entityFile = $this->create($configName, $object, $path);
+        $this->write($configName, $entityFile, $data);
+
+        return $entityFile;
+    }
+
+    /**
+     * Create an EntityFile
+     *
+     * Side effect: deletes old file if path changes
+     */
+    public function create(string $configName, object $object, string $path): EntityFileInterface
+    {
+        $config = $this->getConfiguration($configName);
+
+        $entityFile = $this->propertyAccessor->getValue($object, $config["property"]);
+
+        if (!$entityFile) {
+            /** @var EntityFileInterface $entityFile */
+            $entityFile = new $config["entity_file_class"]();
+            $entityFile
+                ->setObjectClass($config["class"])
+                ->setObjectProperty($config["property"])
+                ->setObjectId($object->getId());
+        } elseif ($entityFile->getPath() !== $path) {
+            // delete old file
+            $this->getStorage($configName)->delete($configName . "/" . $entityFile->getPath());
+        }
+
+        $entityFile->setPath($path);
+        $this->propertyAccessor->setValue($object, $config["property"], $entityFile);
+
+        return $entityFile;
+    }
+
+    /**
+     * Write an EntityFile
+     *
+     * @param resource|File|string $data
+     */
+    public function write(string $configName, EntityFileInterface $entityFile, $data): void
     {
         $storage = $this->getStorage($configName);
-
-        $path = $configName . "/" . $name;
+        $path = $configName . "/" . $entityFile->getPath();
 
         switch (true) {
             case is_resource($data):
@@ -40,6 +84,12 @@ class EntityFileManager
                 $storage->write($path, $data);
                 break;
         }
+
+        $mimeType = $storage->mimeType($path);
+        $size = $storage->fileSize($path);
+
+        $entityFile->setMimeType($mimeType);
+        $entityFile->setSize($size);
     }
 
     /**

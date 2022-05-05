@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Lle\EntityFileBundle\DependencyInjection;
 
+use Lle\EntityFileBundle\Entity\EntityFile;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class Configuration implements ConfigurationInterface
 {
-    public const DEFAULT_STORAGE = "lle_entity_file.storage.default";
+    public const DEFAULT_STORAGE_ADAPTER = "lle_entity_file.storage.default";
+    public const DEFAULT_ENTITY_FILE_CLASS = EntityFile::class;
 
     public function getConfigTreeBuilder()
     {
@@ -23,7 +25,8 @@ class Configuration implements ConfigurationInterface
                         ->children()
                             ->scalarNode("class")->isRequired()->end()
                             ->scalarNode("property")->isRequired()->end()
-                            ->scalarNode("storage_adapter")->defaultValue(self::DEFAULT_STORAGE)->end()
+                            ->scalarNode("storage_adapter")->defaultValue(self::DEFAULT_STORAGE_ADAPTER)->end()
+                            ->scalarNode("entity_file_class")->defaultValue(self::DEFAULT_ENTITY_FILE_CLASS)->end()
                         ->end()
                     ->end()
                 ->end()

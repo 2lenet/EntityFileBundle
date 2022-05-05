@@ -24,7 +24,7 @@ class LleEntityFileExtension extends Extension implements PrependExtensionInterf
     {
         $container->prependExtensionConfig("flysystem", [
             "storages" => [
-                Configuration::DEFAULT_STORAGE => [
+                Configuration::DEFAULT_STORAGE_ADAPTER => [
                     "adapter" => "local",
                     "options" => [
                         "directory" => $container->getParameter("kernel.project_dir") . "/data",

@@ -18,11 +18,15 @@ interface EntityFileInterface
 
     public function setObjectProperty(?string $objectProperty): self;
 
-    public function getName(): ?string;
-
-    public function setName(?string $name): self;
-
     public function getPath(): ?string;
 
     public function setPath(?string $path): self;
+
+    public function getMimeType(): ?string;
+
+    public function setMimeType(?string $mimeType): self;
+
+    public function getSize(): ?float;
+
+    public function setSize(?float $size): self;
 }
