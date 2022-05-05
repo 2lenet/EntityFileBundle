@@ -81,6 +81,23 @@ $this->em->persist($entityFile);
 $this->em->flush();
 ```
 
+* For some reason, I want to save my files somewhere else than data
+
+Create your own storage adapter, which is basically a copy of the default one with different directory option.
+```yaml
+unicorn.storage:
+    adapter: "local"
+    options:
+        directory: "%kernel.project_dir%/unicorns"
+        permissions:
+            file:
+                public: 511
+                private: 511
+            dir:
+                public: 511
+                private: 511
+```
+
 ### Retrieve files
 
 ```php
