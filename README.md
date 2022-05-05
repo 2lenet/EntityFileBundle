@@ -26,7 +26,7 @@ This bundle works with configurations. A configuration = 1 entity 1 file system.
 
 For example, you may have a configuration for the logo of multiple sellers, and a configuration for the pictures of the products they sell.
 
-### Basic example
+### Basic configuration
 
 In  `lle_entity_file.yaml`
 ```yaml
@@ -44,7 +44,7 @@ That's it! With the default storage adapter configuration, those files will be s
 
 This bundle uses the [FlySystem Symfony Bundle](https://flysystem.thephpleague.com/docs/). You can create your own storage adapters, (Local disk, FTP, Drive...).
 
-For that, you need to [configure a new adapter](https://github.com/thephpleague/flysystem-bundle). Then, change the `storage_adapter` of your configuration.
+For that, you need to [configure a new adapter](https://github.com/thephpleague/flysystem-bundle/blob/master/docs/B-configuration-reference.md). Then, change the `storage_adapter` of your configuration.
 
 ## Usage
 
