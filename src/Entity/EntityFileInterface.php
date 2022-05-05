@@ -6,9 +6,9 @@ interface EntityFileInterface
 {
     public function __toString(): string;
 
-    public function getObjectId(): mixed;
+    public function getEntityId(): mixed;
 
-    public function setObjectId(mixed $objectId): self;
+    public function setEntityId(mixed $entityId): self;
 
     public function getConfigName(): ?string;
 

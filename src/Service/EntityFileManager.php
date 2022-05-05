@@ -9,7 +9,6 @@ use Lle\EntityFileBundle\Exception\EntityFileException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpFoundation\File\File;
-use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 class EntityFileManager
 {
@@ -22,22 +21,102 @@ class EntityFileManager
     }
 
     /**
+     * Retrieve all EntityFiles for one entity.
+     *
+     * @param string $configName the configuration name
+     * @param object $entity the entity to search for
+     * @return EntityFileInterface[]
+     */
+    public function get(string $configName, object $entity): array
+    {
+        $config = $this->getConfiguration($configName);
+
+        return $this->em->getRepository($config["entity_file_class"])
+            ->findBy([
+                "configName" => $configName,
+                "entityId" => $entity->getId(),
+            ]);
+    }
+
+    /**
+     * Retrieve one EntityFile for one entity.
+     * Use only when you are sure there is only one file per entity.
+     *
+     * @param string $configName the configuration name
+     * @param object $entity the entity to search for
+     * @return EntityFileInterface|null
+     */
+    public function getOne(string $configName, object $entity): ?EntityFileInterface
+    {
+        $config = $this->getConfiguration($configName);
+
+        return $this->em->getRepository($config["entity_file_class"])
+            ->findOneBy([
+                "configName" => $configName,
+                "entityId" => $entity->getId(),
+            ]);
+    }
+
+    /**
      * Create and write an EntityFile
      *
-     * @param resource|File|string $data
+     * @param string $configName the configuration name
+     * @param object $entity entity to link to the file
+     * @param resource|File|string $data file contents
+     * @param string $path path/name of the file
+     * @return EntityFileInterface the new EntityFile
      */
-    public function save(string $configName, object $object, $data, string $path): EntityFileInterface
+    public function save(string $configName, object $entity, $data, string $path): EntityFileInterface
     {
-        $entityFile = $this->create($configName, $object, $path);
+        $entityFile = $this->create($configName, $entity, $path);
         $this->write($configName, $entityFile, $data);
 
         return $entityFile;
     }
 
     /**
-     * Create an EntityFile
+     * Delete an EntityFile
+     *
+     * @param EntityFileInterface $entityFile the entity file to delete
+     * @return void
      */
-    public function create(string $configName, object $object, string $path): EntityFileInterface
+    public function delete(EntityFileInterface $entityFile): void
+    {
+        $storage = $this->getStorage($entityFile->getConfigName());
+        $storage->delete($entityFile->getConfigName() . "/" . $entityFile->getPath());
+
+        $this->em->remove($entityFile);
+        $this->em->flush();
+    }
+
+    /**
+     * Move an EntityFile. Always use this method if you want to rename a file.
+     *
+     * @param EntityFileInterface $entityFile the EntityFile to move
+     * @param string $path the new path
+     * @return void
+     */
+    public function move(EntityFileInterface $entityFile, string $path): void
+    {
+        $storage = $this->getStorage($entityFile->getConfigName());
+
+        $storage->move(
+            $entityFile->getConfigName() . "/" . $entityFile->getPath(),
+            $entityFile->getConfigName() . "/" . $path
+        );
+
+        $entityFile->setPath($path);
+    }
+
+    /**
+     * Create an EntityFile
+     *
+     * @param string $configName the configuration name
+     * @param object $entity entity to link to the file
+     * @param string $path path/name of the file
+     * @return EntityFileInterface the new EntityFile
+     */
+    public function create(string $configName, object $entity, string $path): EntityFileInterface
     {
         $config = $this->getConfiguration($configName);
 
@@ -45,7 +124,7 @@ class EntityFileManager
         $entityFile = new $config["entity_file_class"]();
 
         $entityFile
-            ->setObjectId($object->getId())
+            ->setEntityId($entity->getId())
             ->setConfigName($configName)
             ->setPath($path);
 
@@ -55,7 +134,10 @@ class EntityFileManager
     /**
      * Write an EntityFile
      *
-     * @param resource|File|string $data
+     * @param string $configName the configuration name
+     * @param EntityFileInterface $entityFile the EntityFile
+     * @param resource|File|string $data file contents
+     * @return void
      */
     public function write(string $configName, EntityFileInterface $entityFile, $data): void
     {

@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 trait EntityFileTrait
 {
     #[ORM\Column(type: "integer")]
-    private mixed $objectId;
+    private mixed $entityId;
 
     #[ORM\Column(type: "string", length: 255)]
     private ?string $configName;
@@ -32,14 +32,14 @@ trait EntityFileTrait
         return (string)$this->name;
     }
 
-    public function getObjectId(): mixed
+    public function getEntityId(): mixed
     {
-        return $this->objectId;
+        return $this->entityId;
     }
 
-    public function setObjectId(mixed $objectId): self
+    public function setEntityId(mixed $entityId): self
     {
-        $this->objectId = $objectId;
+        $this->entityId = $entityId;
 
         return $this;
     }
