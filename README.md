@@ -81,6 +81,19 @@ $this->em->persist($entityFile);
 $this->em->flush();
 ```
 
+* I want to have a dynamic path in my file structure!
+
+```php
+$manager->save($order, $data, "you/can/do/this");
+
+// example:
+
+$dir = $order->getDate()->format("Y-m");
+$name = $order->getId() . ".xml";
+
+$manager->save($order, $data, $dir . "/" . $name)
+```
+
 * For some reason, I want to save my files somewhere else than data
 
 Create your own storage adapter in `flysystem.yaml`, which is basically a copy of the default one with different directory option.
