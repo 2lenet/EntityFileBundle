@@ -2,6 +2,7 @@
 
 namespace Lle\EntityFileBundle\Service;
 
+use Doctrine\ORM\EntityManagerInterface;
 use League\Flysystem\FilesystemOperator;
 use Lle\EntityFileBundle\Entity\EntityFileInterface;
 use Lle\EntityFileBundle\Exception\EntityFileException;
@@ -15,7 +16,7 @@ class EntityFileManager
     public function __construct(
         private ParameterBagInterface $parameters,
         private ServiceLocator $storageLocator,
-        private PropertyAccessorInterface $propertyAccessor,
+        private EntityManagerInterface $em,
     )
     {
     }
@@ -35,29 +36,18 @@ class EntityFileManager
 
     /**
      * Create an EntityFile
-     *
-     * Side effect: deletes old file if path changes
      */
     public function create(string $configName, object $object, string $path): EntityFileInterface
     {
         $config = $this->getConfiguration($configName);
 
-        $entityFile = $this->propertyAccessor->getValue($object, $config["property"]);
+        /** @var EntityFileInterface $entityFile */
+        $entityFile = new $config["entity_file_class"]();
 
-        if (!$entityFile) {
-            /** @var EntityFileInterface $entityFile */
-            $entityFile = new $config["entity_file_class"]();
-            $entityFile
-                ->setObjectClass($config["class"])
-                ->setObjectProperty($config["property"])
-                ->setObjectId($object->getId());
-        } elseif ($entityFile->getPath() !== $path) {
-            // delete old file
-            $this->getStorage($configName)->delete($configName . "/" . $entityFile->getPath());
-        }
-
-        $entityFile->setPath($path);
-        $this->propertyAccessor->setValue($object, $config["property"], $entityFile);
+        $entityFile
+            ->setObjectId($object->getId())
+            ->setConfigName($configName)
+            ->setPath($path);
 
         return $entityFile;
     }

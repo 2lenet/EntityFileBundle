@@ -10,10 +10,7 @@ trait EntityFileTrait
     private mixed $objectId;
 
     #[ORM\Column(type: "string", length: 255)]
-    private ?string $objectClass;
-
-    #[ORM\Column(type: "string", length: 255)]
-    private ?string $objectProperty;
+    private ?string $configName;
 
     #[ORM\Column(type: "string", length: 255, nullable: true)]
     private ?string $name;
@@ -47,26 +44,14 @@ trait EntityFileTrait
         return $this;
     }
 
-    public function getObjectClass(): ?string
+    public function getConfigName(): ?string
     {
-        return $this->objectClass;
+        return $this->configName;
     }
 
-    public function setObjectClass(?string $objectClass): self
+    public function setConfigName(?string $configName): self
     {
-        $this->objectClass = $objectClass;
-
-        return $this;
-    }
-
-    public function getObjectProperty(): ?string
-    {
-        return $this->objectProperty;
-    }
-
-    public function setObjectProperty(?string $objectProperty): self
-    {
-        $this->objectProperty = $objectProperty;
+        $this->configName = $configName;
 
         return $this;
     }

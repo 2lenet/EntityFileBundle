@@ -10,13 +10,9 @@ interface EntityFileInterface
 
     public function setObjectId(mixed $objectId): self;
 
-    public function getObjectClass(): ?string;
+    public function getConfigName(): ?string;
 
-    public function setObjectClass(?string $objectClass): self;
-
-    public function getObjectProperty(): ?string;
-
-    public function setObjectProperty(?string $objectProperty): self;
+    public function setConfigName(?string $configName): self;
 
     public function getPath(): ?string;
 
