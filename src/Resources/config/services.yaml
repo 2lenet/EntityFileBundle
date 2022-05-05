@@ -3,3 +3,6 @@ services:
         autowire: true
         public: false
         autoconfigure: true
+
+    Lle\EntityFileBundle\Service\EntityFileManager:
+        arguments: [ '@parameter_bag' ]
