@@ -5,4 +5,7 @@ services:
         autoconfigure: true
 
     Lle\EntityFileBundle\Service\EntityFileManager:
-        arguments: [ '@parameter_bag' ]
+        arguments:
+            - '@parameter_bag'
+            - '@doctrine.orm.entity_manager'
+            - !tagged_locator { tag: 'flysystem.storage' }

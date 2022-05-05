@@ -9,7 +9,7 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class Configuration implements ConfigurationInterface
 {
-    public const DEFAULT_STORAGE = "entityfile.storage";
+    public const DEFAULT_STORAGE = "lle_entity_file.storage.default";
 
     public function getConfigTreeBuilder()
     {
