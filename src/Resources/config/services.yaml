@@ -4,6 +4,11 @@ services:
         public: false
         autoconfigure: true
 
+
+    Lle\EntityFileBundle\Controller\:
+        resource: '../../Controller'
+        tags: [ 'controller.service_arguments' ]
+
     Lle\EntityFileBundle\Service\EntityFileLoader:
         arguments:
             - '@parameter_bag'

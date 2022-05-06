@@ -1,0 +1,3 @@
+lle_entity_file:
+    resource: '../../Controller/EntityFileController.php'
+    type: annotation

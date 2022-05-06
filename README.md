@@ -8,6 +8,7 @@ With this bundle, you can attach files to entities.
   * [Change the storage adapter](#change-the-storage-adapter)
 * [Usage](#usage)
   * [Retrieve files](#retrieve-files)
+  * [Retrieve files from URL](#retrieve-files-from-url)
   * [Access file contents](#access-file-contents)
   * [Delete a file](#delete-a-file)
   * [Rename or move a file](#rename-or-move-a-file)
@@ -63,7 +64,7 @@ $this->em->persist($entityFile);
 $this->em->flush();
 ```
 
-$data may be a string, a Symfony File object (includes UploadedFile) or a resource.
+$data may be a string, a Symfony File object (including UploadedFile) or a resource.
 
 > :warning: **Never forget to persist and flush the EntityFile.**
 
@@ -119,6 +120,33 @@ flysystem:
 $manager->get($seller);
 $manager->getOne($seller);
 ```
+
+### Retrieve files from URL
+
+If you didn't use Symfony Flex, you need to add the routes in routes.yaml:
+```yaml
+lle_entity_file:
+    resource: "@LleEntityFileBundle/Resources/config/routes.yaml"
+```
+
+Two routes are available:
+
+* lle_entityfile_entityfile_read (requires configName and id)  
+Example: /lle-entity-file/seller_logos/1
+* lle_entityfile_entityfile_readbypath (requires configName and path)  
+  Example: /lle-entity-file/seller_logos?path=2le.png
+
+#### Protect your urls
+By default, only logged in users can access those urls. You can change the `role` key in the configuration:
+```yaml
+operation_report:
+    # ...
+    role: "ROLE_OPERATOR"
+```
+
+* I want to do something more complex !
+
+[Create a custom voter.](https://symfony.com/doc/current/security/voters.html)
 
 ### Access file contents
 

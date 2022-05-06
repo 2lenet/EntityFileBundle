@@ -18,13 +18,19 @@ class EntityFileManager
 
     public function __construct(
         private ParameterBagInterface  $parameters,
-        private ServiceLocator         $storageLocator,
+        ServiceLocator                 $storageLocator,
         private EntityManagerInterface $em,
         private string                 $configName,
     )
     {
-        $this->config = $this->getConfiguration($this->configName);
-        $this->storage = $this->getStorage($this->configName);
+        $configurations = $this->parameters->get("lle.entity_file.configurations");
+
+        if (!isset($configurations[$configName])) {
+            throw new EntityFileException("Configuration '$configName' does not exist.");
+        }
+
+        $this->config = $configurations[$this->configName];
+        $this->storage = $storageLocator->get($this->config["storage_adapter"]);
     }
 
     /**
@@ -174,35 +180,13 @@ class EntityFileManager
         $entityFile->setSize($size);
     }
 
-    /**
-     * Retrieve a configuration's storage
-     *
-     * @param string $configName the configuration name
-     * @return FilesystemOperator the storage operator (writer/reader)
-     * @throws EntityFileException if the configuration does not exist
-     */
     protected function getStorage(string $configName): FilesystemOperator
     {
-        $storageAdapter = $this->getConfiguration($configName)["storage_adapter"];
-
-        return $this->storageLocator->get($storageAdapter);
+        return $this->storage;
     }
 
-    /**
-     * Retrieve a configuration by name
-     *
-     * @param string $configName the configuration name
-     * @return array the configuration
-     * @throws EntityFileException if the configuration does not exist
-     */
-    protected function getConfiguration(string $configName): array
+    public function getConfig(): array
     {
-        $configurations = $this->parameters->get("lle.entity_file.configurations");
-
-        if (!isset($configurations[$configName])) {
-            throw new EntityFileException("Configuration '$configName' does not exist.");
-        }
-
-        return $configurations[$configName];
+        return $this->config;
     }
 }
