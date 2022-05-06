@@ -48,7 +48,7 @@ For that, you need to [configure a new adapter](https://github.com/thephpleague/
 
 ## Usage
 
-First of all, you need to get the manager for your configuration.
+First of all, you need to get the manager for your configuration. For that, use the `Lle\EntityFileBundle\Service\EntityFileLoader`
 
 ```php
 $manager = $entityFileLoader->get("seller_logos");
@@ -121,7 +121,11 @@ $manager->getOne($seller);
 ```
 
 ### Access file contents
-WIP
+
+```php
+$manager->read($file);
+$manager->readStream($file);
+```
 
 ### Delete a file
 ```php

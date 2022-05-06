@@ -59,6 +59,24 @@ class EntityFileManager
     }
 
     /**
+     * @param EntityFileInterface $entityFile the EntityFile to read
+     * @return string
+     */
+    public function read(EntityFileInterface $entityFile): string
+    {
+        return $this->storage->read($this->configName . "/" . $entityFile->getPath());
+    }
+
+    /**
+     * @param EntityFileInterface $entityFile the EntityFile to read
+     * @return resource
+     */
+    public function readStream(EntityFileInterface $entityFile)
+    {
+        return $this->storage->readStream($this->configName . "/" . $entityFile->getPath());
+    }
+
+    /**
      * Create and write an EntityFile
      *
      * @param object $entity entity to link to the file
