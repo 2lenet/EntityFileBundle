@@ -139,7 +139,7 @@ Example: /lle-entity-file/seller_logos/1
 #### Protect your urls
 By default, only logged in users can access those urls. You can change the `role` key in the configuration:
 ```yaml
-operation_report:
+operation_reports:
     # ...
     role: "ROLE_OPERATOR"
 ```
@@ -147,6 +147,14 @@ operation_report:
 * I want to do something more complex !
 
 [Create a custom voter.](https://symfony.com/doc/current/security/voters.html)
+
+#### Change content disposition
+By default, files are served inline. You can change the disposition key under your configuration:
+```yaml
+zip_reports:
+    # ...
+    disposition: "attachment"
+```
 
 ### Access file contents
 
