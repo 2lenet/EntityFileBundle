@@ -10,3 +10,5 @@ parameters:
     paths:
         - src
     checkGenericClassInNonGenericObjectType: false
+    excludePaths:
+        - src/Crudit/*

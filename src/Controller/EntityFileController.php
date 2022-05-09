@@ -3,12 +3,10 @@
 namespace Lle\EntityFileBundle\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Lle\EntityFileBundle\Entity\EntityFile;
 use Lle\EntityFileBundle\Entity\EntityFileInterface;
 use Lle\EntityFileBundle\Service\EntityFileLoader;
 use Lle\EntityFileBundle\Service\EntityFileManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\File\Stream;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;

@@ -1,0 +1,7 @@
+<div class="card shadow mb-4">
+    <div class="card-body">
+        {% for file in view.data.files %}
+            {{ file.path }}
+        {% endfor %}
+    </div>
+</div>
