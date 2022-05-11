@@ -9,6 +9,7 @@ use Lle\EntityFileBundle\Service\EntityFileManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -22,7 +23,7 @@ class EntityFileController extends AbstractController
     {
     }
 
-    #[Route("/{configName}/{id}", requirements: ["id" => "\d+"])]
+    #[Route("/{configName}/{id}", methods: ["GET"])]
     public function read(string $configName, $id): StreamedResponse
     {
         $manager = $this->entityFileLoader->get($configName);
@@ -42,7 +43,7 @@ class EntityFileController extends AbstractController
         return $this->getStreamedResponse($entityFile, $manager);
     }
 
-    #[Route("/{configName}")]
+    #[Route("/{configName}", methods: ["GET"])]
     public function readByPath(string $configName, Request $request): StreamedResponse
     {
         $path = $request->get("path");
@@ -83,5 +84,11 @@ class EntityFileController extends AbstractController
             "Content-Length" => $entityFile->getSize(),
             "Content-Disposition" => $disposition,
         ]);
+    }
+
+    #[Route("/{configName}/{id}", methods: ["POST"])]
+    public function addFile(string $configName, $id)
+    {
+        return new Response("My name is... TODO");
     }
 }

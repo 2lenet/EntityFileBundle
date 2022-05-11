@@ -38,6 +38,7 @@ class EntityFileBrickFactory extends AbstractBasicBrickFactory
             ->setTemplate("@LleEntityFile/crudit/brick/entity_file")
             ->setData([
                 "files" => $files,
+                "resource" => $resource,
             ])
             ->setConfig($brickConfigurator->getConfig($this->getRequest()));
 

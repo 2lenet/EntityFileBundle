@@ -3,6 +3,7 @@
 namespace Lle\EntityFileBundle\Crudit\Brick;
 
 use Lle\CruditBundle\Brick\AbstractBrickConfig;
+use Symfony\Component\HttpFoundation\Request;
 
 class EntityFileBrickConfig extends AbstractBrickConfig
 {
@@ -14,6 +15,13 @@ class EntityFileBrickConfig extends AbstractBrickConfig
         $result->setConfigName($configName);
 
         return $result;
+    }
+
+    public function getConfig(Request $request): array
+    {
+        return array_merge(parent::getConfig($request), [
+           "configName" => $this->configName,
+        ]);
     }
 
     public function getConfigName(): string

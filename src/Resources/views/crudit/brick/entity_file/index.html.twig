@@ -1,7 +1,15 @@
+<script src="{{ asset('bundles/lleentityfile/entityfile/app.js') }}"></script>
+<link rel="stylesheet" href="{{ asset('bundles/lleentityfile/entityfile/css.css') }}"/>
+
 <div class="card shadow mb-4">
     <div class="card-body">
         {% for file in view.data.files %}
             {{ file.path }}
         {% endfor %}
+
+        <form action="{{ path('lle_entityfile_entityfile_addfile', {
+            configName: view.config.configName,
+            id: view.data.resource.id,
+        }) }}" id="lle-entityfile-dropzone-{{ view.id }}" class="dropzone lle-entity-dropzone"></form>
     </div>
 </div>
