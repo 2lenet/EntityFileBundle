@@ -7,6 +7,8 @@ use Lle\EntityFileBundle\Entity\EntityFileInterface;
 use Lle\EntityFileBundle\Service\EntityFileLoader;
 use Lle\EntityFileBundle\Service\EntityFileManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -87,8 +89,34 @@ class EntityFileController extends AbstractController
     }
 
     #[Route("/{configName}/{id}", methods: ["POST"])]
-    public function addFile(string $configName, $id)
+    public function addFile(string $configName, $id, Request $request)
     {
-        return new Response("My name is... TODO");
+        $manager = $this->entityFileLoader->get($configName);
+
+        $form = $this->createForm(FileType::class);
+        $form->handleRequest($request);
+
+        $config = $manager->getConfig();
+        $entity = $this->em->find($config["class"], $id);
+
+        if (!$entity) {
+            throw $this->createNotFoundException();
+        }
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            /** @var UploadedFile $file */
+            $file = $form->getData();
+            $path = time() . "_" . $file->getClientOriginalName();
+
+            $entityFile = $manager->save($entity, $file, $path);
+            $entityFile->setName($file->getClientOriginalName());
+
+            $this->em->persist($entityFile);
+            $this->em->flush();
+
+            return new Response();
+        }
+
+        return new Response(null, 400);
     }
 }

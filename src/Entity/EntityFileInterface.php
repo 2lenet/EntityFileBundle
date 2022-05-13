@@ -25,4 +25,8 @@ interface EntityFileInterface
     public function getSize(): ?float;
 
     public function setSize(?float $size): self;
+
+    public function getName(): ?string;
+
+    public function setName(?string $name): self;
 }

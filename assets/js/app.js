@@ -10,6 +10,10 @@ let onLoad = (callback) => {
 
 onLoad(() => {
     document.querySelectorAll(".lle-entity-dropzone").forEach((e) => {
-        let dropzone = new Dropzone(e);
+        let options = {
+            addRemoveLinks: true,
+        };
+        
+        let dropzone = new Dropzone(e, options);
     });
 });

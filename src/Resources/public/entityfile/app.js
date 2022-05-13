@@ -2293,7 +2293,10 @@ var onLoad = function onLoad(callback) {
 
 onLoad(function () {
   document.querySelectorAll(".lle-entity-dropzone").forEach(function (e) {
-    var dropzone = new dropzone__WEBPACK_IMPORTED_MODULE_0__["default"](e);
+    var options = {
+      addRemoveLinks: true
+    };
+    var dropzone = new dropzone__WEBPACK_IMPORTED_MODULE_0__["default"](e, options);
   });
 });
 })();
