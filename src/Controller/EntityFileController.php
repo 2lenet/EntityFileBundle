@@ -123,7 +123,7 @@ class EntityFileController extends AbstractController
         $parts = explode("/", $entityFile->getPath());
         $disposition = HeaderUtils::makeDisposition(
             $manager->getConfig()["disposition"],
-            end($parts),
+            $entityFile->getName(),
             "file",
         );
 
@@ -163,7 +163,24 @@ class EntityFileController extends AbstractController
             $this->em->persist($entityFile);
             $this->em->flush();
 
-            return new Response();
+            $url = $this->generateUrl("lle_entityfile_entityfile_readbypath", [
+                "configName" => $configName,
+                "path" => $entityFile->getPath(),
+            ]);
+            $deleteUrl = $this->generateUrl("lle_entityfile_entityfile_deletebypath", [
+                "configName" => $configName,
+                "path" => $entityFile->getPath(),
+            ]);
+            $isImage = str_starts_with($entityFile->getMimeType(), "image/");
+
+            return new JsonResponse([
+                "url" => $url,
+                "deleteUrl" => $deleteUrl,
+                "name" => $entityFile->getName(),
+                "size" => $entityFile->getSize(),
+                "resizeThumbnail" => $isImage,
+                "disablePreview" => !$isImage,
+            ]);
         }
 
         return new Response(null, 400);

@@ -1,4 +1,7 @@
 import Dropzone from "dropzone";
+import previewTemplate from "./preview-template.html";
+import fr from "./i18n/fr.json";
+import en from "./i18n/en.json";
 
 let onLoad = (callback) => {
     if (document.readyState !== "loading") {
@@ -10,10 +13,32 @@ let onLoad = (callback) => {
 
 onLoad(() => {
     document.querySelectorAll(".lle-entity-dropzone").forEach((form) => {
+
+        let locale = form.dataset.locale.substring(0, 2);
+        let messages;
+        switch (locale) {
+            case "fr":
+                messages = fr;
+                break;
+            default:
+                messages = en;
+        }
+
         let options = {
-            addRemoveLinks: true,
+            ...messages,
             ignoreHiddenFiles: false,
+            previewTemplate: previewTemplate,
+            maxFilesize: 2048,
             thumbnail: function (file, dataUrl) {
+
+                for (let node of file.previewElement.querySelectorAll("[data-dz-remove]")) {
+                    node.title = messages.dictRemoveFile;
+                }
+                for (let node of file.previewElement.querySelectorAll("[data-dz-download]")) {
+                    node.title = messages.dictDownloadFile;
+                    node.href = file.url;
+                    node.download = file.name;
+                }
 
                 // override default function to disable thumbnails for non image files
                 if (!file.disablePreview && file.previewElement) {
@@ -32,9 +57,22 @@ onLoad(() => {
 
         // handle file deletion
         dropzone.on("removedfile", file => {
-            fetch(file.deleteUrl, {
-                method: "DELETE",
-            })
+            if (file.deleteUrl) {
+                fetch(file.deleteUrl, {
+                    method: "DELETE",
+                });
+            }
+        });
+
+        // update delete & download url after adding a file
+        dropzone.on("success", (file, responseData) => {
+            file.url = responseData.url;
+            file.deleteUrl = responseData.deleteUrl;
+
+            for (let node of file.previewElement.querySelectorAll("[data-dz-download]")) {
+                node.href = responseData.deleteUrl;
+                node.download = file.name;
+            }
         });
 
         let existingFiles = JSON.parse(form.dataset.files);
@@ -45,7 +83,6 @@ onLoad(() => {
             dropzone.files.push(file);
         }
 
-        // TODO: gestion max fichiers
-        // TODO: traduction textes (faire des fichiers js...)
+        // TODO: add config for max files
     });
 });

@@ -11,6 +11,7 @@
                 id="lle-entityfile-dropzone-{{ view.id }}"
                 class="dropzone lle-entity-dropzone"
                 data-files="{{ view.data.files | json_encode }}"
+                data-locale={{ app.request.locale }}
         ></form>
     </div>
 </div>

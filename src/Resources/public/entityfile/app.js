@@ -2,6 +2,23 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./assets/js/preview-template.html":
+/*!*****************************************!*\
+  !*** ./assets/js/preview-template.html ***!
+  \*****************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+// Module
+var code = "<div class=\"dz-preview dz-file-preview\">\n    <div class=\"dz-image\"><img data-dz-thumbnail/></div>\n    <div class=\"dz-details\">\n        <div class=\"dz-size\"><span data-dz-size></span></div>\n        <div class=\"dz-filename\"><span data-dz-name></span></div>\n    </div>\n    <div class=\"dz-progress\">\n        <span class=\"dz-upload\" data-dz-uploadprogress></span>\n    </div>\n    <div class=\"dz-error-message\"><span data-dz-errormessage></span></div>\n    <div class=\"dz-success-mark\">\n        <svg\n                width=\"54\"\n                height=\"54\"\n                viewBox=\"0 0 54 54\"\n                fill=\"white\"\n                xmlns=\"http://www.w3.org/2000/svg\"\n        >\n            <path\n                    d=\"M10.2071 29.7929L14.2929 25.7071C14.6834 25.3166 15.3166 25.3166 15.7071 25.7071L21.2929 31.2929C21.6834 31.6834 22.3166 31.6834 22.7071 31.2929L38.2929 15.7071C38.6834 15.3166 39.3166 15.3166 39.7071 15.7071L43.7929 19.7929C44.1834 20.1834 44.1834 20.8166 43.7929 21.2071L22.7071 42.2929C22.3166 42.6834 21.6834 42.6834 21.2929 42.2929L10.2071 31.2071C9.81658 30.8166 9.81658 30.1834 10.2071 29.7929Z\"\n            />\n        </svg>\n    </div>\n    <div class=\"dz-error-mark\">\n        <svg\n                width=\"54\"\n                height=\"54\"\n                viewBox=\"0 0 54 54\"\n                fill=\"white\"\n                xmlns=\"http://www.w3.org/2000/svg\"\n        >\n            <path\n                    d=\"M26.2929 20.2929L19.2071 13.2071C18.8166 12.8166 18.1834 12.8166 17.7929 13.2071L13.2071 17.7929C12.8166 18.1834 12.8166 18.8166 13.2071 19.2071L20.2929 26.2929C20.6834 26.6834 20.6834 27.3166 20.2929 27.7071L13.2071 34.7929C12.8166 35.1834 12.8166 35.8166 13.2071 36.2071L17.7929 40.7929C18.1834 41.1834 18.8166 41.1834 19.2071 40.7929L26.2929 33.7071C26.6834 33.3166 27.3166 33.3166 27.7071 33.7071L34.7929 40.7929C35.1834 41.1834 35.8166 41.1834 36.2071 40.7929L40.7929 36.2071C41.1834 35.8166 41.1834 35.1834 40.7929 34.7929L33.7071 27.7071C33.3166 27.3166 33.3166 26.6834 33.7071 26.2929L40.7929 19.2071C41.1834 18.8166 41.1834 18.1834 40.7929 17.7929L36.2071 13.2071C35.8166 12.8166 35.1834 12.8166 34.7929 13.2071L27.7071 20.2929C27.3166 20.6834 26.6834 20.6834 26.2929 20.2929Z\"\n            />\n        </svg>\n    </div>\n    <div class=\"row justify-content-center mt-1\">\n        <button role=\"button\" class=\"col-3 btn btn-primary btn-sm me-1\" data-dz-remove><i class=\"fa-solid fa-trash-can\"></i></button>\n        <a role=\"button\" class=\"col-3 btn btn-primary btn-sm ms-1\" data-dz-download><i class=\"fa-solid fa-download\"></i></a>\n    </div>\n</div>\n";
+// Exports
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (code);
+
+/***/ }),
+
 /***/ "./node_modules/just-extend/index.esm.js":
 /*!***********************************************!*\
   !*** ./node_modules/just-extend/index.esm.js ***!
@@ -2215,6 +2232,26 @@ function $3ed269f2f0fb224b$var$__guardMethod__(obj, methodName, transform) {
 //# sourceMappingURL=dropzone.mjs.map
 
 
+/***/ }),
+
+/***/ "./assets/js/i18n/en.json":
+/*!********************************!*\
+  !*** ./assets/js/i18n/en.json ***!
+  \********************************/
+/***/ ((module) => {
+
+module.exports = JSON.parse('{"dictDefaultMessage":"Drop files here to upload","dictFallbackMessage":"Your browser does not support drag\'n\'drop file uploads.","dictFallbackText":"Please use the form below to upload your files.","dictFileTooBig":"File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB.","dictInvalidFileType":"You can\'t upload files of this type.","dictResponseError":"There was an error server side.","dictCancelUpload":"Cancel upload","dictUploadCanceled":"Upload canceled.","dictCancelUploadConfirmation":"Are you sure you want to cancel this upload?","dictRemoveFile":"Remove","dictRemoveFileConfirmation":"Are you sure you want to remove this file ?","dictMaxFilesExceeded":"Maximum amount of files reached.","dictDownloadFile":"Download"}');
+
+/***/ }),
+
+/***/ "./assets/js/i18n/fr.json":
+/*!********************************!*\
+  !*** ./assets/js/i18n/fr.json ***!
+  \********************************/
+/***/ ((module) => {
+
+module.exports = JSON.parse('{"dictDefaultMessage":"Faites glisser des fichiers ici pour téléverser","dictFallbackMessage":"Votre navigateur n\'est pas compatible avec le glisser-déposer","dictFallbackText":"Veuillez utiliser le formulaire ci-dessous pour téléverser un fichier","dictFileTooBig":"Le fichier est trop gros ({{filesize}}MiB). Taille maximale: {{maxFilesize}}MiB.","dictInvalidFileType":"Vous ne pouvez pas téléverser un fichier de ce type","dictResponseError":"Il y a eu une erreur du serveur.","dictCancelUpload":"Annuler le téléversement","dictUploadCanceled":"Téléversement annulé.","dictCancelUploadConfirmation":"Êtes-vous sûr de vouloir arrêter ce téléversement ?","dictRemoveFile":"Supprimer","dictRemoveFileConfirmation":"Voulez-vous vraiment supprimer ce fichier ?","dictMaxFilesExceeded":"Nombre maximal de fichiers atteint","dictDownloadFile":"Télécharger"}');
+
 /***/ })
 
 /******/ 	});
@@ -2281,11 +2318,23 @@ var __webpack_exports__ = {};
   \**************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var dropzone__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! dropzone */ "./node_modules/dropzone/dist/dropzone.mjs");
+/* harmony import */ var _preview_template_html__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./preview-template.html */ "./assets/js/preview-template.html");
+/* harmony import */ var _i18n_fr_json__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./i18n/fr.json */ "./assets/js/i18n/fr.json");
+/* harmony import */ var _i18n_en_json__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./i18n/en.json */ "./assets/js/i18n/en.json");
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+
+
 
 
 
@@ -2299,27 +2348,70 @@ var onLoad = function onLoad(callback) {
 
 onLoad(function () {
   document.querySelectorAll(".lle-entity-dropzone").forEach(function (form) {
-    var options = {
-      addRemoveLinks: true,
+    var locale = form.dataset.locale.substring(0, 2);
+    var messages;
+
+    switch (locale) {
+      case "fr":
+        messages = _i18n_fr_json__WEBPACK_IMPORTED_MODULE_2__;
+        break;
+
+      default:
+        messages = _i18n_en_json__WEBPACK_IMPORTED_MODULE_3__;
+    }
+
+    var options = _objectSpread(_objectSpread({}, messages), {}, {
       ignoreHiddenFiles: false,
+      previewTemplate: _preview_template_html__WEBPACK_IMPORTED_MODULE_1__["default"],
+      maxFilesize: 2048,
       thumbnail: function thumbnail(file, dataUrl) {
-        // override default function to disable thumbnails for non image files
+        var _iterator = _createForOfIteratorHelper(file.previewElement.querySelectorAll("[data-dz-remove]")),
+            _step;
+
+        try {
+          for (_iterator.s(); !(_step = _iterator.n()).done;) {
+            var node = _step.value;
+            node.title = messages.dictRemoveFile;
+          }
+        } catch (err) {
+          _iterator.e(err);
+        } finally {
+          _iterator.f();
+        }
+
+        var _iterator2 = _createForOfIteratorHelper(file.previewElement.querySelectorAll("[data-dz-download]")),
+            _step2;
+
+        try {
+          for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+            var _node = _step2.value;
+            _node.title = messages.dictDownloadFile;
+            _node.href = file.url;
+            _node.download = file.name;
+          } // override default function to disable thumbnails for non image files
+
+        } catch (err) {
+          _iterator2.e(err);
+        } finally {
+          _iterator2.f();
+        }
+
         if (!file.disablePreview && file.previewElement) {
           file.previewElement.classList.remove("dz-file-preview");
 
-          var _iterator = _createForOfIteratorHelper(file.previewElement.querySelectorAll("[data-dz-thumbnail]")),
-              _step;
+          var _iterator3 = _createForOfIteratorHelper(file.previewElement.querySelectorAll("[data-dz-thumbnail]")),
+              _step3;
 
           try {
-            for (_iterator.s(); !(_step = _iterator.n()).done;) {
-              var thumbnailElement = _step.value;
+            for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+              var thumbnailElement = _step3.value;
               thumbnailElement.alt = file.name;
               thumbnailElement.src = dataUrl;
             }
           } catch (err) {
-            _iterator.e(err);
+            _iterator3.e(err);
           } finally {
-            _iterator.f();
+            _iterator3.f();
           }
 
           return setTimeout(function () {
@@ -2327,31 +2419,53 @@ onLoad(function () {
           }, 1);
         }
       }
-    };
+    });
+
     var dropzone = new dropzone__WEBPACK_IMPORTED_MODULE_0__["default"](form, options); // handle file deletion
 
     dropzone.on("removedfile", function (file) {
-      fetch(file.deleteUrl, {
-        method: "DELETE"
-      });
+      if (file.deleteUrl) {
+        fetch(file.deleteUrl, {
+          method: "DELETE"
+        });
+      }
+    }); // update delete & download url after adding a file
+
+    dropzone.on("success", function (file, responseData) {
+      file.url = responseData.url;
+      file.deleteUrl = responseData.deleteUrl;
+
+      var _iterator4 = _createForOfIteratorHelper(file.previewElement.querySelectorAll("[data-dz-download]")),
+          _step4;
+
+      try {
+        for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+          var node = _step4.value;
+          node.href = responseData.deleteUrl;
+          node.download = file.name;
+        }
+      } catch (err) {
+        _iterator4.e(err);
+      } finally {
+        _iterator4.f();
+      }
     });
     var existingFiles = JSON.parse(form.dataset.files); // https://github.com/dropzone/dropzone/discussions/1909
 
-    var _iterator2 = _createForOfIteratorHelper(existingFiles),
-        _step2;
+    var _iterator5 = _createForOfIteratorHelper(existingFiles),
+        _step5;
 
     try {
-      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-        var file = _step2.value;
+      for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+        var file = _step5.value;
         dropzone.displayExistingFile(file, file.url, null, null, file.resizeThumbnail);
         dropzone.files.push(file);
-      } // TODO: gestion max fichiers
-      // TODO: traduction textes (faire des fichiers js...)
+      } // TODO: add config for max files
 
     } catch (err) {
-      _iterator2.e(err);
+      _iterator5.e(err);
     } finally {
-      _iterator2.f();
+      _iterator5.f();
     }
   });
 });

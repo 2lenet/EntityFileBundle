@@ -1,0 +1,15 @@
+{
+    "dictDefaultMessage": "Faites glisser des fichiers ici pour téléverser",
+    "dictFallbackMessage": "Votre navigateur n'est pas compatible avec le glisser-déposer",
+    "dictFallbackText": "Veuillez utiliser le formulaire ci-dessous pour téléverser un fichier",
+    "dictFileTooBig": "Le fichier est trop gros ({{filesize}}MiB). Taille maximale: {{maxFilesize}}MiB.",
+    "dictInvalidFileType": "Vous ne pouvez pas téléverser un fichier de ce type",
+    "dictResponseError": "Il y a eu une erreur du serveur.",
+    "dictCancelUpload": "Annuler le téléversement",
+    "dictUploadCanceled": "Téléversement annulé.",
+    "dictCancelUploadConfirmation": "Êtes-vous sûr de vouloir arrêter ce téléversement ?",
+    "dictRemoveFile": "Supprimer",
+    "dictRemoveFileConfirmation": "Voulez-vous vraiment supprimer ce fichier ?",
+    "dictMaxFilesExceeded": "Nombre maximal de fichiers atteint",
+    "dictDownloadFile": "Télécharger"
+}
