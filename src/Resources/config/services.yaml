@@ -14,3 +14,4 @@ services:
             - '@parameter_bag'
             - !tagged_locator { tag: 'flysystem.storage' }
             - '@doctrine.orm.entity_manager'
+            - '@router.default'

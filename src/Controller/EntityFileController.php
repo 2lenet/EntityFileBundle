@@ -75,7 +75,8 @@ class EntityFileController extends AbstractController
         $parts = explode("/", $entityFile->getPath());
         $disposition = HeaderUtils::makeDisposition(
             $manager->getConfig()["disposition"],
-            end($parts)
+            end($parts),
+            "file",
         );
 
         return new StreamedResponse(function () use ($resource) {

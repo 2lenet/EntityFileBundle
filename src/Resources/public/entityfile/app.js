@@ -2281,6 +2281,12 @@ var __webpack_exports__ = {};
   \**************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var dropzone__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! dropzone */ "./node_modules/dropzone/dist/dropzone.mjs");
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 
 
 var onLoad = function onLoad(callback) {
@@ -2292,11 +2298,55 @@ var onLoad = function onLoad(callback) {
 };
 
 onLoad(function () {
-  document.querySelectorAll(".lle-entity-dropzone").forEach(function (e) {
+  document.querySelectorAll(".lle-entity-dropzone").forEach(function (form) {
     var options = {
-      addRemoveLinks: true
+      addRemoveLinks: true,
+      ignoreHiddenFiles: false,
+      thumbnail: function thumbnail(file, dataUrl) {
+        // override default function to disable thumbnails for non image files
+        if (!file.disablePreview && file.previewElement) {
+          file.previewElement.classList.remove("dz-file-preview");
+
+          var _iterator = _createForOfIteratorHelper(file.previewElement.querySelectorAll("[data-dz-thumbnail]")),
+              _step;
+
+          try {
+            for (_iterator.s(); !(_step = _iterator.n()).done;) {
+              var thumbnailElement = _step.value;
+              thumbnailElement.alt = file.name;
+              thumbnailElement.src = dataUrl;
+            }
+          } catch (err) {
+            _iterator.e(err);
+          } finally {
+            _iterator.f();
+          }
+
+          return setTimeout(function () {
+            return file.previewElement.classList.add("dz-image-preview");
+          }, 1);
+        }
+      }
     };
-    var dropzone = new dropzone__WEBPACK_IMPORTED_MODULE_0__["default"](e, options);
+    var dropzone = new dropzone__WEBPACK_IMPORTED_MODULE_0__["default"](form, options);
+    var existingFiles = JSON.parse(form.dataset.files); // https://github.com/dropzone/dropzone/discussions/1909
+
+    var _iterator2 = _createForOfIteratorHelper(existingFiles),
+        _step2;
+
+    try {
+      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+        var file = _step2.value;
+        dropzone.displayExistingFile(file, file.url, null, null, file.resizeThumbnail);
+        dropzone.files.push(file);
+      } // TODO: gestion max fichiers
+      // TODO: traduction textes (faire des fichiers js...)
+
+    } catch (err) {
+      _iterator2.e(err);
+    } finally {
+      _iterator2.f();
+    }
   });
 });
 })();
