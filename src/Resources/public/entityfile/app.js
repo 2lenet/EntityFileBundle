@@ -2328,7 +2328,13 @@ onLoad(function () {
         }
       }
     };
-    var dropzone = new dropzone__WEBPACK_IMPORTED_MODULE_0__["default"](form, options);
+    var dropzone = new dropzone__WEBPACK_IMPORTED_MODULE_0__["default"](form, options); // handle file deletion
+
+    dropzone.on("removedfile", function (file) {
+      fetch(file.deleteUrl, {
+        method: "DELETE"
+      });
+    });
     var existingFiles = JSON.parse(form.dataset.files); // https://github.com/dropzone/dropzone/discussions/1909
 
     var _iterator2 = _createForOfIteratorHelper(existingFiles),

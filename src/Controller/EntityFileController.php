@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -66,6 +67,53 @@ class EntityFileController extends AbstractController
         $this->denyAccessUnlessGranted($config["role"], $entityFile);
 
         return $this->getStreamedResponse($entityFile, $manager);
+    }
+
+    #[Route("/{configName}/{id}", methods: ["DELETE"])]
+    public function delete(string $configName, $id): JsonResponse
+    {
+        $manager = $this->entityFileLoader->get($configName);
+
+        $config = $manager->getConfig();
+
+        $entityFile = $this->em
+            ->getRepository($config["entity_file_class"])
+            ->find($id);
+
+        if (!$entityFile) {
+            throw $this->createNotFoundException();
+        }
+
+        $this->denyAccessUnlessGranted($config["role"], $entityFile);
+
+        $manager->delete($entityFile);
+
+        return new JsonResponse();
+    }
+
+    #[Route("/{configName}", methods: ["DELETE"])]
+    public function deleteByPath(string $configName, Request $request): JsonResponse
+    {
+        $path = $request->get("path");
+        $manager = $this->entityFileLoader->get($configName);
+
+        $config = $manager->getConfig();
+
+        $entityFile = $this->em
+            ->getRepository($config["entity_file_class"])
+            ->findOneBy([
+                "path" => $path,
+            ]);
+
+        if (!$entityFile) {
+            throw $this->createNotFoundException();
+        }
+
+        $this->denyAccessUnlessGranted($config["role"], $entityFile);
+
+        $manager->delete($entityFile);
+
+        return new JsonResponse();
     }
 
     private function getStreamedResponse(EntityFileInterface $entityFile, EntityFileManager $manager): StreamedResponse

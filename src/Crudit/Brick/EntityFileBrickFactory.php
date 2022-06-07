@@ -10,6 +10,7 @@ use Lle\EntityFileBundle\Entity\EntityFileInterface;
 use Lle\EntityFileBundle\Service\EntityFileLoader;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Security;
 
 class EntityFileBrickFactory extends AbstractBasicBrickFactory
 {
@@ -18,6 +19,7 @@ class EntityFileBrickFactory extends AbstractBasicBrickFactory
         RequestStack $requestStack,
         private EntityFileLoader $loader,
         private UrlGeneratorInterface $urlGenerator,
+        private Security $security,
     )
     {
         parent::__construct($resourceResolver, $requestStack);
@@ -50,13 +52,22 @@ class EntityFileBrickFactory extends AbstractBasicBrickFactory
     protected function getFiles(string $configName, object $resource): array
     {
         $manager = $this->loader->get($configName);
+        $config = $manager->getConfig();
         $files = $manager->get($resource);
 
         $result = [];
 
         /** @var EntityFileInterface $file */
         foreach ($files as $file) {
+            if (!$this->security->isGranted($config["role"], $file)) {
+                continue;
+            }
+
             $url = $this->urlGenerator->generate("lle_entityfile_entityfile_readbypath", [
+                "configName" => $configName,
+                "path" => $file->getPath(),
+            ]);
+            $deleteUrl = $this->urlGenerator->generate("lle_entityfile_entityfile_deletebypath", [
                 "configName" => $configName,
                 "path" => $file->getPath(),
             ]);
@@ -64,6 +75,7 @@ class EntityFileBrickFactory extends AbstractBasicBrickFactory
 
             $result[] = [
                 "url" => $url,
+                "deleteUrl" => $deleteUrl,
                 "name" => $file->getName(),
                 "size" => $file->getSize(),
                 "resizeThumbnail" => $isImage,

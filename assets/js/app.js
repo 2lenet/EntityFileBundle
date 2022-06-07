@@ -25,10 +25,18 @@ onLoad(() => {
 
                     return setTimeout(() => file.previewElement.classList.add("dz-image-preview"), 1);
                 }
-            }
+            },
         };
-        
+
         let dropzone = new Dropzone(form, options);
+
+        // handle file deletion
+        dropzone.on("removedfile", file => {
+            fetch(file.deleteUrl, {
+                method: "DELETE",
+            })
+        });
+
         let existingFiles = JSON.parse(form.dataset.files);
 
         // https://github.com/dropzone/dropzone/discussions/1909
