@@ -77,6 +77,7 @@ class EntityFileBrickFactory extends AbstractBasicBrickFactory
                 "url" => $url,
                 "deleteUrl" => $deleteUrl,
                 "name" => $file->getName(),
+                "path" => $file->getPath(),
                 "size" => $file->getSize(),
                 "resizeThumbnail" => $isImage,
                 "disablePreview" => !$isImage,

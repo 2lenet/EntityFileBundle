@@ -155,7 +155,7 @@ class EntityFileController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var UploadedFile $file */
             $file = $form->getData();
-            $path = time() . "_" . $file->getClientOriginalName();
+            $path = $file->getClientOriginalName();
 
             $entityFile = $manager->save($entity, $file, $path);
             $entityFile->setName($file->getClientOriginalName());
@@ -177,6 +177,7 @@ class EntityFileController extends AbstractController
                 "url" => $url,
                 "deleteUrl" => $deleteUrl,
                 "name" => $entityFile->getName(),
+                "path" => $entityFile->getPath(),
                 "size" => $entityFile->getSize(),
                 "resizeThumbnail" => $isImage,
                 "disablePreview" => !$isImage,

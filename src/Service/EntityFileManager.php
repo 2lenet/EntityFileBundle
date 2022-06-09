@@ -87,12 +87,12 @@ class EntityFileManager
      *
      * @param object $entity entity to link to the file
      * @param resource|File|string $data file contents
-     * @param string $path path/name of the file
+     * @param string $name name of the file
      * @return EntityFileInterface the new EntityFile
      */
-    public function save(object $entity, $data, string $path): EntityFileInterface
+    public function save(object $entity, $data, string $name): EntityFileInterface
     {
-        $entityFile = $this->create($entity, $path);
+        $entityFile = $this->create($entity, $name);
         $this->write($entityFile, $data);
 
         return $entityFile;
@@ -133,10 +133,10 @@ class EntityFileManager
      * Create an EntityFile
      *
      * @param object $entity entity to link to the file
-     * @param string $path path/name of the file
+     * @param string $name name of the file
      * @return EntityFileInterface the new EntityFile
      */
-    public function create(object $entity, string $path): EntityFileInterface
+    public function create(object $entity, string $name): EntityFileInterface
     {
         /** @var EntityFileInterface $entityFile */
         $entityFile = new $this->config["entity_file_class"]();
@@ -144,7 +144,8 @@ class EntityFileManager
         $entityFile
             ->setEntityId($entity->getId())
             ->setConfigName($this->configName)
-            ->setPath($path);
+            ->setName($name)
+            ->setPath(time() . "_" . $name);
 
         return $entityFile;
     }

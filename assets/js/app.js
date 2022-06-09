@@ -37,7 +37,7 @@ onLoad(() => {
                 for (let node of file.previewElement.querySelectorAll("[data-dz-download]")) {
                     node.title = messages.dictDownloadFile;
                     node.href = file.url;
-                    node.download = file.name;
+                    node.download = file.path;
                 }
 
                 // override default function to disable thumbnails for non image files
