@@ -18,7 +18,8 @@
         "league/flysystem-bundle": "^2.2",
         "doctrine/orm": "^2.12",
         "doctrine/doctrine-bundle": "^2.6",
-        "symfony/webpack-encore-bundle": "^1.14"
+        "symfony/webpack-encore-bundle": "^1.14",
+        "gedmo/doctrine-extensions": "^3.7"
     },
     "require-dev": {
         "phpstan/phpstan": "^1.6",
@@ -28,5 +29,10 @@
         "phpstan/phpstan-symfony": "^1.1",
         "squizlabs/php_codesniffer": "^3.6",
         "slevomat/coding-standard": "^7.1"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
     }
 }
