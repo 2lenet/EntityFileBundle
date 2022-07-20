@@ -3,6 +3,8 @@
 namespace Lle\EntityFileBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Blameable\Traits\BlameableEntity;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Lle\EntityFileBundle\Entity\Trait\EntityFileTrait;
 
 #[ORM\Entity]
@@ -10,6 +12,8 @@ use Lle\EntityFileBundle\Entity\Trait\EntityFileTrait;
 class EntityFile implements EntityFileInterface
 {
     use EntityFileTrait;
+    use TimestampableEntity;
+    use BlameableEntity;
 
     #[ORM\Id]
     #[ORM\GeneratedValue]

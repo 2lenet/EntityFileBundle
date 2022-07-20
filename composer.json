@@ -19,6 +19,7 @@
         "doctrine/orm": "^2.12",
         "doctrine/doctrine-bundle": "^2.6",
         "symfony/webpack-encore-bundle": "^1.14",
+        "gedmo/doctrine-extensions": "^3.7"
         "symfony/form": "^5.4 || ^6.1"
     },
     "require-dev": {
