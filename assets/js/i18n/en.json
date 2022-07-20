@@ -1,0 +1,15 @@
+{
+    "dictDefaultMessage": "Drop files here to upload",
+    "dictFallbackMessage": "Your browser does not support drag'n'drop file uploads.",
+    "dictFallbackText": "Please use the form below to upload your files.",
+    "dictFileTooBig": "File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB.",
+    "dictInvalidFileType": "You can't upload files of this type.",
+    "dictResponseError": "There was an error server side.",
+    "dictCancelUpload": "Cancel upload",
+    "dictUploadCanceled": "Upload canceled.",
+    "dictCancelUploadConfirmation": "Are you sure you want to cancel this upload?",
+    "dictRemoveFile": "Remove",
+    "dictRemoveFileConfirmation": "Are you sure you want to remove this file ?",
+    "dictMaxFilesExceeded": "Maximum amount of files reached.",
+    "dictDownloadFile": "Download"
+}

@@ -184,4 +184,17 @@ https://flysystem.thephpleague.com/docs/usage/exception-handling/
 
 ## Crudit
 
-WIP
+This bundle is compatible with 2LE's Crudit bundle.
+
+You can use the EntityFileBrick, for example in tabs:
+
+```php
+  public function getTabs(): array
+  {
+      return [
+          "tab.files" => EntityFileBrickConfig::new("seller_logos"),
+      ];
+  }
+```
+
+It features a dropzone where you can see, add, remove and download files.

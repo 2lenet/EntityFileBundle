@@ -10,7 +10,13 @@ Encore
     .enableSassLoader()
     .enableSourceMaps(false)
     .enableVersioning(false)
-    .disableSingleRuntimeChunk();
+    .disableSingleRuntimeChunk()
+    .addRule(
+        {
+            test: /\.html$/,
+            exclude: /node_modules/,
+            use: {loader: 'html-loader'}
+        });
 
 const entityfile = Encore.getWebpackConfig();
 

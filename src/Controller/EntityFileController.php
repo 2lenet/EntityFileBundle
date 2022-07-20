@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -68,6 +69,53 @@ class EntityFileController extends AbstractController
         return $this->getStreamedResponse($entityFile, $manager);
     }
 
+    #[Route("/{configName}/{id}", methods: ["DELETE"])]
+    public function delete(string $configName, $id): JsonResponse
+    {
+        $manager = $this->entityFileLoader->get($configName);
+
+        $config = $manager->getConfig();
+
+        $entityFile = $this->em
+            ->getRepository($config["entity_file_class"])
+            ->find($id);
+
+        if (!$entityFile) {
+            throw $this->createNotFoundException();
+        }
+
+        $this->denyAccessUnlessGranted($config["role"], $entityFile);
+
+        $manager->delete($entityFile);
+
+        return new JsonResponse();
+    }
+
+    #[Route("/{configName}", methods: ["DELETE"])]
+    public function deleteByPath(string $configName, Request $request): JsonResponse
+    {
+        $path = $request->get("path");
+        $manager = $this->entityFileLoader->get($configName);
+
+        $config = $manager->getConfig();
+
+        $entityFile = $this->em
+            ->getRepository($config["entity_file_class"])
+            ->findOneBy([
+                "path" => $path,
+            ]);
+
+        if (!$entityFile) {
+            throw $this->createNotFoundException();
+        }
+
+        $this->denyAccessUnlessGranted($config["role"], $entityFile);
+
+        $manager->delete($entityFile);
+
+        return new JsonResponse();
+    }
+
     private function getStreamedResponse(EntityFileInterface $entityFile, EntityFileManager $manager): StreamedResponse
     {
         $resource = $manager->readStream($entityFile);
@@ -75,7 +123,8 @@ class EntityFileController extends AbstractController
         $parts = explode("/", $entityFile->getPath());
         $disposition = HeaderUtils::makeDisposition(
             $manager->getConfig()["disposition"],
-            end($parts)
+            $entityFile->getName(),
+            "file",
         );
 
         return new StreamedResponse(function () use ($resource) {
@@ -106,7 +155,7 @@ class EntityFileController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var UploadedFile $file */
             $file = $form->getData();
-            $path = time() . "_" . $file->getClientOriginalName();
+            $path = $file->getClientOriginalName();
 
             $entityFile = $manager->save($entity, $file, $path);
             $entityFile->setName($file->getClientOriginalName());
@@ -114,7 +163,25 @@ class EntityFileController extends AbstractController
             $this->em->persist($entityFile);
             $this->em->flush();
 
-            return new Response();
+            $url = $this->generateUrl("lle_entityfile_entityfile_readbypath", [
+                "configName" => $configName,
+                "path" => $entityFile->getPath(),
+            ]);
+            $deleteUrl = $this->generateUrl("lle_entityfile_entityfile_deletebypath", [
+                "configName" => $configName,
+                "path" => $entityFile->getPath(),
+            ]);
+            $isImage = str_starts_with($entityFile->getMimeType(), "image/");
+
+            return new JsonResponse([
+                "url" => $url,
+                "deleteUrl" => $deleteUrl,
+                "name" => $entityFile->getName(),
+                "path" => $entityFile->getPath(),
+                "size" => $entityFile->getSize(),
+                "resizeThumbnail" => $isImage,
+                "disablePreview" => !$isImage,
+            ]);
         }
 
         return new Response(null, 400);
