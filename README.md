@@ -72,6 +72,13 @@ $data may be a string, a Symfony File object (including UploadedFile) or a resou
 
 You can use your own Entity class, it needs to be a Doctrine entity that implements `Lle\EntityFileBundle\Entity\EntityFileInterface`. For your convenience, the trait `LleEntityFileBundle\Entity\Trait\EntityFileTrait` exists.
 
+You will also have to update your configuration:
+```yaml
+unicorn:
+    # ...
+    entity_file_class: "App\Entity\UnicornEntityFile"
+```
+
 * I want to edit my new properties!
 
 ```php
@@ -144,11 +151,13 @@ operation_reports:
     role: "ROLE_OPERATOR"
 ```
 
+To make your files public, you can use "PUBLIC_ACCESS" in the `role` key.
+
 * I want to do something more complex !
 
 [Create a custom voter.](https://symfony.com/doc/current/security/voters.html)
 
-#### Change content disposition
+#### Change content disposition (Show in browser or automatically download)
 By default, files are served inline. You can change the disposition key under your configuration:
 ```yaml
 zip_reports:
