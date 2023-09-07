@@ -151,7 +151,9 @@ operation_reports:
     role: "ROLE_OPERATOR"
 ```
 
-To make your files public, you can use "PUBLIC_ACCESS" in the `role` key.
+* I want the files to be public !
+
+You can use "PUBLIC_ACCESS" in the `role` key.
 
 * I want to do something more complex !
 
@@ -181,11 +183,10 @@ $manager->delete($file);
 ### Rename or move a file
 ```php
 $manager->move($file, "actually_not_an_unicorn.png");
-$this->em->persist($file);
 $this->em->flush();
 ```
 
-> :warning: **Never forget to persist and flush the EntityFile.**
+> :warning: **Never forget to flush the EntityFile.**
 
 ### Exception handling
 
