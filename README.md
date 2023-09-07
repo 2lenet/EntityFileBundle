@@ -4,7 +4,7 @@ With this bundle, you can attach files to entities.
 
 * [Installation](#installation)
 * [Configuration](#configuration)
-  * [Basic example](#basic-example)
+  * [Basic configuration](#basic-configuration)
   * [Change the storage adapter](#change-the-storage-adapter)
 * [Usage](#usage)
   * [Retrieve files](#retrieve-files)
@@ -76,7 +76,7 @@ You will also have to update your configuration:
 ```yaml
 unicorn:
     # ...
-    entity_file_class: "App\Entity\UnicornEntityFile"
+    entity_file_class: "App\\Entity\\UnicornEntityFile"
 ```
 
 * I want to edit my new properties!
