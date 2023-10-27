@@ -1,6 +1,11 @@
 <script src="{{ asset('bundles/lleentityfile/entityfile/app.js') }}"></script>
 <link rel="stylesheet" href="{{ asset('bundles/lleentityfile/entityfile/css.css') }}"/>
-
+<script>
+    window.addEventListener('load', function () {
+        var badge = document.getElementById("{{ tab.id }}-badge");
+        badge.textContent ="{{ view.data.files|length }}";
+    });
+</script>
 <div class="card shadow mb-4">
     <div class="card-body">
         <form
