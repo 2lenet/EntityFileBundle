@@ -82,7 +82,5 @@ onLoad(() => {
             dropzone.displayExistingFile(file, file.url, null, null, file.resizeThumbnail);
             dropzone.files.push(file);
         }
-
-        // TODO: add config for max files
     });
 });
