@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 trait EntityFileTrait
 {
     #[ORM\Column(type: "integer")]
-    private mixed $entityId;
+    private ?int $entityId = null;
 
     #[ORM\Column(type: "string", length: 255)]
     private ?string $configName;
