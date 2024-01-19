@@ -8,9 +8,9 @@ use Lle\CruditBundle\Dto\BrickView;
 use Lle\CruditBundle\Resolver\ResourceResolver;
 use Lle\EntityFileBundle\Entity\EntityFileInterface;
 use Lle\EntityFileBundle\Service\EntityFileLoader;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Security\Core\Security;
 
 class EntityFileBrickFactory extends AbstractBasicBrickFactory
 {

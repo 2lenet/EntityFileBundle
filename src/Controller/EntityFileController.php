@@ -27,14 +27,18 @@ class EntityFileController extends AbstractController
     }
 
     #[Route("/{configName}/{id}", methods: ["GET"])]
-    public function read(string $configName, $id): StreamedResponse
+    public function read(string $configName, mixed $id): StreamedResponse
     {
         $manager = $this->entityFileLoader->get($configName);
 
         $config = $manager->getConfig();
 
+        /** @var class-string $entityClass */
+        $entityClass = $config["entity_file_class"];
+
+        /** @var EntityFileInterface|null $entityFile */
         $entityFile = $this->em
-            ->getRepository($config["entity_file_class"])
+            ->getRepository($entityClass)
             ->find($id);
 
         if (!$entityFile) {
@@ -54,8 +58,12 @@ class EntityFileController extends AbstractController
 
         $config = $manager->getConfig();
 
+        /** @var class-string $entityClass */
+        $entityClass = $config["entity_file_class"];
+
+        /** @var EntityFileInterface|null $entityFile */
         $entityFile = $this->em
-            ->getRepository($config["entity_file_class"])
+            ->getRepository($entityClass)
             ->findOneBy([
                 "path" => $path,
             ]);
@@ -70,14 +78,18 @@ class EntityFileController extends AbstractController
     }
 
     #[Route("/{configName}/{id}", methods: ["DELETE"])]
-    public function delete(string $configName, $id): JsonResponse
+    public function delete(string $configName, mixed $id): JsonResponse
     {
         $manager = $this->entityFileLoader->get($configName);
 
         $config = $manager->getConfig();
 
+        /** @var class-string $entityClass */
+        $entityClass = $config["entity_file_class"];
+
+        /** @var EntityFileInterface|null $entityFile */
         $entityFile = $this->em
-            ->getRepository($config["entity_file_class"])
+            ->getRepository($entityClass)
             ->find($id);
 
         if (!$entityFile) {
@@ -99,8 +111,12 @@ class EntityFileController extends AbstractController
 
         $config = $manager->getConfig();
 
+        /** @var class-string $entityClass */
+        $entityClass = $config["entity_file_class"];
+
+        /** @var EntityFileInterface|null $entityFile */
         $entityFile = $this->em
-            ->getRepository($config["entity_file_class"])
+            ->getRepository($entityClass)
             ->findOneBy([
                 "path" => $path,
             ]);
@@ -120,10 +136,10 @@ class EntityFileController extends AbstractController
     {
         $resource = $manager->readStream($entityFile);
 
-        $parts = explode("/", $entityFile->getPath());
+        $parts = explode("/", (string)$entityFile->getPath());
         $disposition = HeaderUtils::makeDisposition(
             $manager->getConfig()["disposition"],
-            $entityFile->getName(),
+            (string)$entityFile->getName(),
             "file",
         );
 
@@ -138,7 +154,7 @@ class EntityFileController extends AbstractController
     }
 
     #[Route("/{configName}/{id}", methods: ["POST"])]
-    public function addFile(string $configName, $id, Request $request)
+    public function addFile(string $configName, mixed $id, Request $request): Response
     {
         $manager = $this->entityFileLoader->get($configName);
 
@@ -146,7 +162,10 @@ class EntityFileController extends AbstractController
         $form->handleRequest($request);
 
         $config = $manager->getConfig();
-        $entity = $this->em->find($config["class"], $id);
+
+        /** @var class-string $entityClass */
+        $entityClass = $config["class"];
+        $entity = $this->em->find($entityClass, $id);
 
         if (!$entity) {
             throw $this->createNotFoundException();
@@ -171,7 +190,7 @@ class EntityFileController extends AbstractController
                 "configName" => $configName,
                 "path" => $entityFile->getPath(),
             ]);
-            $isImage = str_starts_with($entityFile->getMimeType(), "image/");
+            $isImage = str_starts_with((string)$entityFile->getMimeType(), "image/");
 
             return new JsonResponse([
                 "url" => $url,
