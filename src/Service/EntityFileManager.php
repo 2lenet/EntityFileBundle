@@ -14,6 +14,7 @@ class EntityFileManager
 {
     private FilesystemOperator $storage;
 
+    /** @var array<string, mixed> */
     private array $config;
 
     public function __construct(
@@ -23,6 +24,7 @@ class EntityFileManager
         private string                 $configName,
     )
     {
+        /** @var array<string, array<string, mixed|class-string>> $configurations */
         $configurations = $this->parameters->get("lle.entity_file.configurations");
 
         if (!isset($configurations[$configName])) {
@@ -41,11 +43,17 @@ class EntityFileManager
      */
     public function get(object $entity): array
     {
-        return $this->em->getRepository($this->config["entity_file_class"])
+        /** @var class-string $entityClass */
+        $entityClass = $this->config["entity_file_class"];
+
+        /** @var EntityFileInterface[] $result */
+        $result = $this->em->getRepository($entityClass)
             ->findBy([
                 "configName" => $this->configName,
-                "entityId" => $entity->getId(),
+                "entityId" => method_exists($entity, 'getId') ? $entity->getId() : null,
             ]);
+
+        return $result;
     }
 
     /**
@@ -57,11 +65,17 @@ class EntityFileManager
      */
     public function getOne(object $entity): ?EntityFileInterface
     {
-        return $this->em->getRepository($this->config["entity_file_class"])
+        /** @var class-string $entityClass */
+        $entityClass = $this->config["entity_file_class"];
+
+        /** @var EntityFileInterface|null $result */
+        $result = $this->em->getRepository($entityClass)
             ->findOneBy([
                 "configName" => $this->configName,
-                "entityId" => $entity->getId(),
+                "entityId" => method_exists($entity, 'getId') ? $entity->getId() : null,
             ]);
+
+        return $result;
     }
 
     /**
@@ -142,7 +156,7 @@ class EntityFileManager
         $entityFile = new $this->config["entity_file_class"]();
 
         $entityFile
-            ->setEntityId($entity->getId())
+            ->setEntityId(method_exists($entity, 'getId') ? $entity->getId() : null)
             ->setConfigName($this->configName)
             ->setName($name)
             ->setPath(time() . "_" . $name);
@@ -186,6 +200,7 @@ class EntityFileManager
         return $this->storage;
     }
 
+    /** @return array<string, mixed> */
     public function getConfig(): array
     {
         return $this->config;

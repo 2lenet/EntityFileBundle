@@ -12,7 +12,7 @@ use Symfony\Component\DependencyInjection\Loader;
 
 class LleEntityFileExtension extends Extension implements PrependExtensionInterface
 {
-    public function load(array $configs, ContainerBuilder $container)
+    public function load(array $configs, ContainerBuilder $container): void
     {
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__ . "/../Resources/config"));
         $loader->load("services.yaml");
@@ -23,6 +23,7 @@ class LleEntityFileExtension extends Extension implements PrependExtensionInterf
 
         $enabledBundles = $container->getParameter("kernel.bundles");
 
+        /** @var mixed[] $enabledBundles */
         if (array_key_exists("LleCruditBundle", $enabledBundles)) {
             // load Crudit compatible services only if Crudit exists
             $brick = new Definition("Lle\EntityFileBundle\Crudit\Brick\EntityFileBrickFactory");
@@ -39,14 +40,17 @@ class LleEntityFileExtension extends Extension implements PrependExtensionInterf
         }
     }
 
-    public function prepend(ContainerBuilder $container)
+    public function prepend(ContainerBuilder $container): void
     {
+        /** @var string $projectDir */
+        $projectDir = $container->getParameter("kernel.project_dir");
+
         $container->prependExtensionConfig("flysystem", [
             "storages" => [
                 Configuration::DEFAULT_STORAGE_ADAPTER => [
                     "adapter" => "local",
                     "options" => [
-                        "directory" => $container->getParameter("kernel.project_dir") . "/data",
+                        "directory" => $projectDir . "/data",
                         "permissions" => [
                             "file" => [
                                 "public" => 511,

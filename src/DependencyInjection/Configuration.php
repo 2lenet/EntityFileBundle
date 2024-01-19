@@ -15,7 +15,7 @@ class Configuration implements ConfigurationInterface
     public const DEFAULT_ENTITY_FILE_CLASS = EntityFile::class;
     public const DEFAULT_ROLE = "ROLE_USER";
 
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder("lle_entity_file");
         $rootNode = $treeBuilder->getRootNode();
