@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 #[Route("/lle-entity-file")]
 class EntityFileController extends AbstractController
@@ -135,11 +136,13 @@ class EntityFileController extends AbstractController
     private function getStreamedResponse(EntityFileInterface $entityFile, EntityFileManager $manager): StreamedResponse
     {
         $resource = $manager->readStream($entityFile);
+        $slugger = new AsciiSlugger();
+        $safeName = $slugger->slug((string)$entityFile->getName());
 
         $parts = explode("/", (string)$entityFile->getPath());
         $disposition = HeaderUtils::makeDisposition(
             $manager->getConfig()["disposition"],
-            (string)$entityFile->getName(),
+            $safeName,
             "file",
         );
 
