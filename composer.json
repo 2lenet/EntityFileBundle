@@ -15,7 +15,7 @@
     ],
     "require": {
         "php": "^8.1",
-        "league/flysystem-bundle": "^2.2",
+        "league/flysystem-bundle": "^3.0",
         "doctrine/orm": "^2.12",
         "doctrine/doctrine-bundle": "^2.6",
         "symfony/webpack-encore-bundle": "^2.0",
