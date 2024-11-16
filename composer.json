@@ -16,11 +16,12 @@
     "require": {
         "php": "^8.1",
         "league/flysystem-bundle": "^3.0",
-        "doctrine/orm": "^2.12",
+        "doctrine/orm": "^2.12||^3.3",
         "doctrine/doctrine-bundle": "^2.6",
         "symfony/webpack-encore-bundle": "^2.0",
         "gedmo/doctrine-extensions": "^3.7",
-        "symfony/form": "^6.1 || ^7.1"
+        "symfony/form": "^6.1 || ^7.1",
+        "2lenet/crudit-bundle": "dev-main"
     },
     "require-dev": {
         "phpstan/phpstan": "^1.6",
