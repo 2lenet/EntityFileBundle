@@ -58,6 +58,8 @@ $manager = $entityFileLoader->get("seller_logos");
 ### Create a file
 
 ```php
+$manager = $entityFileLoader->get("seller_logos");
+
 $entityFile = $manager->save($seller, $data, $path);
 
 $this->em->persist($entityFile);
@@ -82,6 +84,8 @@ unicorn:
 * I want to edit my new properties!
 
 ```php
+$manager = $entityFileLoader->get("unicorn");
+
 $entityFile = $manager->save($seller, $data, "unicorn.png");
 
 $entityFile->setDescription("Picture of a very sexy unicorn");
@@ -92,6 +96,8 @@ $this->em->flush();
 * I want to have a dynamic path in my file structure!
 
 ```php
+$manager = $entityFileLoader->get("seller_logos");
+
 $manager->save($order, $data, "you/can/do/this");
 
 // example:
@@ -124,6 +130,8 @@ flysystem:
 ### Retrieve files
 
 ```php
+$manager = $entityFileLoader->get("seller_logos");
+
 $manager->get($seller);
 $manager->getOne($seller);
 ```
@@ -170,18 +178,24 @@ zip_reports:
 ### Access file contents
 
 ```php
+$manager = $entityFileLoader->get("seller_logos");
+
 $manager->read($file);
 $manager->readStream($file);
 ```
 
 ### Delete a file
 ```php
+$manager = $entityFileLoader->get("seller_logos");
+
 // deletes the entity and the actual file
 $manager->delete($file);
 ```
 
 ### Rename or move a file
 ```php
+$manager = $entityFileLoader->get("seller_logos");
+
 $manager->move($file, "actually_not_an_unicorn.png");
 $this->em->flush();
 ```
