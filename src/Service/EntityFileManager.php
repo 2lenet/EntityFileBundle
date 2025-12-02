@@ -184,7 +184,7 @@ class EntityFileManager
                 break;
             case is_string($data):
             default:
-                $this->storage->write($path, $data);
+                $this->storage->write($path, (string)$data);
                 break;
         }
 
