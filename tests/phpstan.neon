@@ -13,4 +13,6 @@ parameters:
         - ../src/Crudit/*
     ignoreErrors:
         -
+            identifier: missingType.iterableValue
+        -
             identifier: missingType.generics

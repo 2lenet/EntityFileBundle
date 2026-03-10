@@ -19,7 +19,6 @@ class Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder("lle_entity_file");
         $rootNode = $treeBuilder->getRootNode();
-        /** @phpstan-ignore-next-line */
         $rootNode
             ->children()
                 ->arrayNode("configurations")

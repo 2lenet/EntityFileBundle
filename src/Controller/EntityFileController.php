@@ -54,7 +54,7 @@ class EntityFileController extends AbstractController
     #[Route("/{configName}", methods: ["GET"])]
     public function readByPath(string $configName, Request $request): StreamedResponse
     {
-        $path = $request->get("path");
+        $path = $request->query->get("path");
         $manager = $this->entityFileLoader->get($configName);
 
         $config = $manager->getConfig();
@@ -107,7 +107,7 @@ class EntityFileController extends AbstractController
     #[Route("/{configName}", methods: ["DELETE"])]
     public function deleteByPath(string $configName, Request $request): JsonResponse
     {
-        $path = $request->get("path");
+        $path = $request->query->get("path");
         $manager = $this->entityFileLoader->get($configName);
 
         $config = $manager->getConfig();
