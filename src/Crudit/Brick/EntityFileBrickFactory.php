@@ -34,7 +34,7 @@ class EntityFileBrickFactory extends AbstractBasicBrickFactory
     {
         /** @var EntityFileBrickConfig $brickConfigurator */
 
-        $resource = $brickConfigurator->getDataSource()->get($this->getRequest()->get("id"));
+        $resource = $brickConfigurator->getDataSource()->get($this->getRequest()->attributes->get("id"));
         $files = $this->getFiles($brickConfigurator->getConfigName(), $resource);
 
         $view = new BrickView($brickConfigurator);
