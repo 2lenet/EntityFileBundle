@@ -9,6 +9,8 @@ use Lle\EntityFileBundle\Entity\Trait\EntityFileTrait;
 
 #[ORM\Entity]
 #[ORM\Table(name: "lle_entity_file")]
+#[ORM\Index(columns: ['entity_id'], name: 'idx_entity_id')]
+#[ORM\Index(columns: ['config_name'], name: 'idx_config_name')]
 class EntityFile implements EntityFileInterface
 {
     use EntityFileTrait;
