@@ -136,14 +136,20 @@ class EntityFileController extends AbstractController
     private function getStreamedResponse(EntityFileInterface $entityFile, EntityFileManager $manager): StreamedResponse
     {
         $resource = $manager->readStream($entityFile);
-        $slugger = new AsciiSlugger();
-        $safeName = $slugger->slug((string)$entityFile->getName());
+        $name = (string)$entityFile->getName() ?: "file";
 
-        $parts = explode("/", (string)$entityFile->getPath());
+        // Slug the basename only: slugging the whole name turns "toto.docx" into "toto-docx",
+        // and the client then appends an extension of its own. The slug is only the ASCII
+        // fallback, the original name is sent as the UTF-8 filename.
+        $slugger = new AsciiSlugger();
+        $extension = pathinfo($name, PATHINFO_EXTENSION);
+        $fallbackName = $slugger->slug(pathinfo($name, PATHINFO_FILENAME))
+            . ($extension ? "." . $extension : "");
+
         $disposition = HeaderUtils::makeDisposition(
             $manager->getConfig()["disposition"],
-            $safeName,
-            "file",
+            $name,
+            $fallbackName ?: "file",
         );
 
         return new StreamedResponse(function () use ($resource) {
