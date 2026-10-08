@@ -70,7 +70,7 @@ onLoad(() => {
             file.deleteUrl = responseData.deleteUrl;
 
             for (let node of file.previewElement.querySelectorAll("[data-dz-download]")) {
-                node.href = responseData.deleteUrl;
+                node.href = responseData.url;
                 node.download = file.name;
             }
         });
