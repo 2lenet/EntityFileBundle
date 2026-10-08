@@ -1,5 +1,5 @@
 {
-    "dictDefaultMessage": "Faites glisser des fichiers ici pour téléverser",
+    "dictDefaultMessage": "Déposer ou cliquer pour importer",
     "dictFallbackMessage": "Votre navigateur n'est pas compatible avec le glisser-déposer",
     "dictFallbackText": "Veuillez utiliser le formulaire ci-dessous pour téléverser un fichier",
     "dictFileTooBig": "Le fichier est trop gros ({{filesize}}MiB). Taille maximale: {{maxFilesize}}MiB.",
