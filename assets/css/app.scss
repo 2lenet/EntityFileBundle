@@ -1,5 +1,6 @@
-@import "node_modules/dropzone/src/basic.scss";
-@import "node_modules/dropzone/src/dropzone.scss";
+// Without extension: dropzone ships .scss up to 6.3.0 and plain .css since 6.3.1
+@import "node_modules/dropzone/src/basic";
+@import "node_modules/dropzone/src/dropzone";
 
 .dz-preview {
     button, button i, a, a i {
