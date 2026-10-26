@@ -9,6 +9,7 @@ With this bundle, you can attach files to entities.
 * [Usage](#usage)
   * [Retrieve files](#retrieve-files)
   * [Retrieve files from URL](#retrieve-files-from-url)
+  * [Restrict accepted file types](#restrict-accepted-file-types)
   * [Access file contents](#access-file-contents)
   * [Delete a file](#delete-a-file)
   * [Rename or move a file](#rename-or-move-a-file)
@@ -173,6 +174,28 @@ By default, files are served inline. You can change the disposition key under yo
 zip_reports:
     # ...
     disposition: "attachment"
+```
+
+### Restrict accepted file types
+
+By default, the upload route accepts any file. List the accepted MIME types in the `mime_types` key:
+```yaml
+seller_logos:
+    # ...
+    mime_types: ["image/jpeg", "image/png", "image/webp"]
+```
+
+An uploaded file is then refused (HTTP 415, the message is shown in the dropzone) unless:
+* its type, detected from its contents, is in the list,
+* and its extension belongs to one of the listed types (`jpg`, `jpeg`, `png`, `webp` here).
+
+Files already stored with another type are no longer displayed in the browser, only downloaded.
+
+> :warning: **Do not accept `image/svg+xml`, `text/html` or `application/xhtml+xml` on a configuration served inline:** they can run scripts on your domain.
+
+The check is also available in your own code:
+```php
+$manager->isAllowed($file); // Symfony File or UploadedFile
 ```
 
 ### Access file contents

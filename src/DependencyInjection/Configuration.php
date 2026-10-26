@@ -30,6 +30,8 @@ class Configuration implements ConfigurationInterface
                             ->scalarNode("entity_file_class")->defaultValue(self::DEFAULT_ENTITY_FILE_CLASS)->end()
                             ->scalarNode("role")->defaultValue(self::DEFAULT_ROLE)->end()
                             ->scalarNode("disposition")->defaultValue(HeaderUtils::DISPOSITION_INLINE)->end()
+                            // empty: every type is accepted, as before this option existed
+                            ->arrayNode("mime_types")->scalarPrototype()->end()->end()
                         ->end()
                     ->end()
                 ->end()

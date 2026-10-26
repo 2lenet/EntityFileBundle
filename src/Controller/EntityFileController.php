@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\AsciiSlugger;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route("/lle-entity-file")]
 class EntityFileController extends AbstractController
@@ -23,6 +24,7 @@ class EntityFileController extends AbstractController
     public function __construct(
         private EntityManagerInterface $em,
         private EntityFileLoader $entityFileLoader,
+        private ?TranslatorInterface $translator = null,
     )
     {
     }
@@ -146,8 +148,11 @@ class EntityFileController extends AbstractController
         $fallbackName = $slugger->slug(pathinfo($name, PATHINFO_FILENAME))
             . ($extension ? "." . $extension : "");
 
+        // A file stored before its type was refused (see "mime_types") is only offered as a download
+        $allowed = $manager->isAllowedMimeType((string)$entityFile->getMimeType());
+
         $disposition = HeaderUtils::makeDisposition(
-            $manager->getConfig()["disposition"],
+            $allowed ? $manager->getConfig()["disposition"] : HeaderUtils::DISPOSITION_ATTACHMENT,
             $name,
             $fallbackName ?: "file",
         );
@@ -156,9 +161,10 @@ class EntityFileController extends AbstractController
             fpassthru($resource);
             exit();
         }, 200, [
-            "Content-Type" => $entityFile->getMimeType(),
+            "Content-Type" => $allowed ? $entityFile->getMimeType() : "application/octet-stream",
             "Content-Length" => $entityFile->getSize(),
             "Content-Disposition" => $disposition,
+            "X-Content-Type-Options" => "nosniff",
         ]);
     }
 
@@ -183,6 +189,11 @@ class EntityFileController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var UploadedFile $file */
             $file = $form->getData();
+
+            if (!$manager->isAllowed($file)) {
+                return $this->getRefusedTypeResponse($manager);
+            }
+
             $path = $file->getClientOriginalName();
 
             $entityFile = $manager->save($entity, $file, $path);
@@ -213,5 +224,18 @@ class EntityFileController extends AbstractController
         }
 
         return new Response(null, 400);
+    }
+
+    /**
+     * Dropzone displays the "error" key of a JSON response.
+     */
+    private function getRefusedTypeResponse(EntityFileManager $manager): JsonResponse
+    {
+        $parameters = ["%extensions%" => implode(", ", $manager->getAllowedExtensions())];
+        $message = $this->translator
+            ? $this->translator->trans("error.refused_type", $parameters, "LleEntityFileBundle")
+            : strtr("This file type is not accepted. Accepted extensions: %extensions%.", $parameters);
+
+        return new JsonResponse(["error" => $message], Response::HTTP_UNSUPPORTED_MEDIA_TYPE);
     }
 }

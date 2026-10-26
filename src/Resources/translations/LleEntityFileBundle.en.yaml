@@ -1,0 +1,2 @@
+error:
+    refused_type: "This file type is not accepted. Accepted extensions: %extensions%."

@@ -9,6 +9,8 @@ use Lle\EntityFileBundle\Exception\EntityFileException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Mime\MimeTypes;
 
 class EntityFileManager
 {
@@ -193,6 +195,56 @@ class EntityFileManager
 
         $entityFile->setMimeType($mimeType);
         $entityFile->setSize($size);
+    }
+
+    /**
+     * Check a file against the "mime_types" option. The type is detected from the contents, and the
+     * extension must belong to an accepted type: refuses both "photo.jpg" holding HTML and a JPEG named "photo.html".
+     *
+     * @param File $file the file to check
+     * @return bool
+     */
+    public function isAllowed(File $file): bool
+    {
+        if ($this->getMimeTypes() === []) {
+            return true;
+        }
+
+        $extension = $file instanceof UploadedFile ? $file->getClientOriginalExtension() : $file->getExtension();
+
+        return $this->isAllowedMimeType((string)$file->getMimeType())
+            && in_array(strtolower($extension), $this->getAllowedExtensions(), true);
+    }
+
+    /**
+     * @param string $mimeType the MIME type to check
+     * @return bool true if the "mime_types" option is empty or contains this type
+     */
+    public function isAllowedMimeType(string $mimeType): bool
+    {
+        return $this->getMimeTypes() === [] || in_array(strtolower($mimeType), $this->getMimeTypes(), true);
+    }
+
+    /**
+     * @return string[] the extensions of the accepted MIME types, empty if every type is accepted
+     */
+    public function getAllowedExtensions(): array
+    {
+        $mimeTypes = MimeTypes::getDefault();
+
+        return array_values(array_unique(array_merge(
+            [],
+            ...array_map(fn (string $type) => $mimeTypes->getExtensions($type), $this->getMimeTypes())
+        )));
+    }
+
+    /** @return string[] */
+    private function getMimeTypes(): array
+    {
+        /** @var string[] $mimeTypes */
+        $mimeTypes = $this->config["mime_types"] ?? [];
+
+        return array_map("strtolower", $mimeTypes);
     }
 
     protected function getStorage(string $configName): FilesystemOperator
