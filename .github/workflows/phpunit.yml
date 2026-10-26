@@ -8,7 +8,7 @@ on:
 
 jobs:
     phpunit:
-        name: "PHPUnit ${{ matrix.php-version }}"
+        name: "PHPUnit ${{ matrix.php_version }}"
 
         runs-on: ubuntu-latest
         strategy:
@@ -16,20 +16,17 @@ jobs:
                 php_version: [8.4]
 
         steps:
-            -   uses: actions/checkout@v2
+            -   uses: actions/checkout@v4
+
+            -   name: "Setup PHP"
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: ${{ matrix.php_version }}
+                    coverage: none
 
             -   name: "Install dependencies with Composer"
-                uses: php-actions/composer@v5
-                with:
-                    php_version: ${{ matrix.php_version }}
-                    version: 2
-                    args: --profile --ignore-platform-reqs
+                run: composer install --no-interaction --no-progress
 
+            # PHPUnit from composer.json, the version the tests are written for
             -   name: "Run PHPUnit"
-                uses: php-actions/phpunit@v2
-                with:
-                    php_version: ${{ matrix.php_version }}
-                    php_extensions: xdebug
-                    version: 10.3
-                    configuration: tests/phpunit/phpunit.xml
-                    bootstrap: vendor/autoload.php
+                run: vendor/bin/phpunit -c tests/phpunit/phpunit.xml

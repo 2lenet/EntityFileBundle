@@ -233,13 +233,13 @@ class EntityFileManager
      * fall back to the extension: a CSV is "text/csv", not "text/plain".
      *
      * @param File $file the file to check
-     * @return string|null
+     * @return string|null null if the contents could not be read, the extension alone is not trusted
      */
     public function guessMimeType(File $file): ?string
     {
         $mimeType = $file->getMimeType();
 
-        if ($mimeType === null || in_array($mimeType, self::INCONCLUSIVE_MIME_TYPES, true)) {
+        if ($mimeType !== null && in_array($mimeType, self::INCONCLUSIVE_MIME_TYPES, true)) {
             $mimeType = MimeTypes::getDefault()->getMimeTypes($this->getExtension($file))[0] ?? $mimeType;
         }
 

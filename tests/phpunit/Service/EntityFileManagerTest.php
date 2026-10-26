@@ -77,11 +77,12 @@ class EntityFileManagerTest extends TestCase
     {
         self::assertSame([], $this->createManager([])->getAllowedExtensions());
         self::assertSame(["png", "csv"], $this->createManager(["image/png", "text/csv"])->getAllowedExtensions());
-        // no duplicates
-        self::assertSame(
-            ["jpg", "jpeg", "jpe", "jfif", "png"],
-            $this->createManager(["image/jpeg", "image/pjpeg", "image/png"])->getAllowedExtensions(),
-        );
+
+        // image/jpeg and image/pjpeg share their extensions, which vary with the symfony/mime version
+        $extensions = $this->createManager(["image/jpeg", "image/pjpeg", "image/png"])->getAllowedExtensions();
+        self::assertSame(array_values(array_unique($extensions)), $extensions);
+        self::assertContains("jpg", $extensions);
+        self::assertContains("png", $extensions);
     }
 
     /**
