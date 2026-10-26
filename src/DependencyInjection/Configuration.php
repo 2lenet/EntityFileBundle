@@ -8,6 +8,7 @@ use Lle\EntityFileBundle\Entity\EntityFile;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\Mime\MimeTypes;
 
 class Configuration implements ConfigurationInterface
 {
@@ -31,7 +32,18 @@ class Configuration implements ConfigurationInterface
                             ->scalarNode("role")->defaultValue(self::DEFAULT_ROLE)->end()
                             ->scalarNode("disposition")->defaultValue(HeaderUtils::DISPOSITION_INLINE)->end()
                             // empty: every type is accepted, as before this option existed
-                            ->arrayNode("mime_types")->scalarPrototype()->end()->end()
+                            ->arrayNode("mime_types")
+                                ->scalarPrototype()
+                                    ->beforeNormalization()->ifString()->then(fn (string $type) => strtolower(trim($type)))->end()
+                                    // an unknown type has no extension, so every file would be refused
+                                    ->validate()
+                                        ->ifTrue(fn (string $type) => MimeTypes::getDefault()->getExtensions($type) === [])
+                                        ->then(fn (string $type) => throw new \InvalidArgumentException(
+                                            "Unknown MIME type \"$type\": symfony/mime knows no extension for it."
+                                        ))
+                                    ->end()
+                                ->end()
+                            ->end()
                         ->end()
                     ->end()
                 ->end()

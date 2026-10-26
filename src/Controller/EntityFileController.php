@@ -21,6 +21,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[Route("/lle-entity-file")]
 class EntityFileController extends AbstractController
 {
+    // English message used as the translation key, so that it is also the message without translator
+    private const REFUSED_TYPE_MESSAGE = "This file type is not accepted. Accepted extensions: %extensions%.";
+
     public function __construct(
         private EntityManagerInterface $em,
         private EntityFileLoader $entityFileLoader,
@@ -44,7 +47,8 @@ class EntityFileController extends AbstractController
             ->getRepository($entityClass)
             ->find($id);
 
-        if (!$entityFile) {
+        // The role and options of another configuration must not apply to this file
+        if (!$entityFile || $entityFile->getConfigName() !== $configName) {
             throw $this->createNotFoundException();
         }
 
@@ -69,6 +73,7 @@ class EntityFileController extends AbstractController
             ->getRepository($entityClass)
             ->findOneBy([
                 "path" => $path,
+                "configName" => $configName,
             ]);
 
         if (!$entityFile) {
@@ -95,7 +100,8 @@ class EntityFileController extends AbstractController
             ->getRepository($entityClass)
             ->find($id);
 
-        if (!$entityFile) {
+        // The role and options of another configuration must not apply to this file
+        if (!$entityFile || $entityFile->getConfigName() !== $configName) {
             throw $this->createNotFoundException();
         }
 
@@ -122,6 +128,7 @@ class EntityFileController extends AbstractController
             ->getRepository($entityClass)
             ->findOneBy([
                 "path" => $path,
+                "configName" => $configName,
             ]);
 
         if (!$entityFile) {
@@ -165,6 +172,9 @@ class EntityFileController extends AbstractController
             "Content-Length" => $entityFile->getSize(),
             "Content-Disposition" => $disposition,
             "X-Content-Type-Options" => "nosniff",
+            // Scripts of an HTML or SVG file cannot run on this domain, even if such a type is accepted.
+            // Not for PDF: browsers refuse to display it in a sandbox.
+            ...($entityFile->getMimeType() === "application/pdf" ? [] : ["Content-Security-Policy" => "sandbox"]),
         ]);
     }
 
@@ -233,8 +243,8 @@ class EntityFileController extends AbstractController
     {
         $parameters = ["%extensions%" => implode(", ", $manager->getAllowedExtensions())];
         $message = $this->translator
-            ? $this->translator->trans("error.refused_type", $parameters, "LleEntityFileBundle")
-            : strtr("This file type is not accepted. Accepted extensions: %extensions%.", $parameters);
+            ? $this->translator->trans(self::REFUSED_TYPE_MESSAGE, $parameters, "LleEntityFileBundle")
+            : strtr(self::REFUSED_TYPE_MESSAGE, $parameters);
 
         return new JsonResponse(["error" => $message], Response::HTTP_UNSUPPORTED_MEDIA_TYPE);
     }

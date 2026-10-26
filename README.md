@@ -152,6 +152,8 @@ Example: /lle-entity-file/seller_logos/1
 * lle_entityfile_entityfile_readbypath (requires configName and path)  
   Example: /lle-entity-file/seller_logos?path=2le.png
 
+A file is only found through the configuration it was uploaded with: its `role`, `disposition` and `mime_types` always apply.
+
 #### Protect your urls
 By default, only logged in users can access those urls. You can change the `role` key in the configuration:
 ```yaml
@@ -186,12 +188,21 @@ seller_logos:
 ```
 
 An uploaded file is then refused (HTTP 415, the message is shown in the dropzone) unless:
-* its type, detected from its contents, is in the list,
-* and its extension belongs to one of the listed types (`jpg`, `jpeg`, `png`, `webp` here).
+* its type is in the list,
+* and its extension belongs to one of the listed types (`jpg`, `jpeg`, `png`, `webp` here), not necessarily to its own type.
+
+The type is detected from the contents. When the contents are inconclusive (`text/plain`, `application/octet-stream`, empty file),
+the extension decides: a CSV is `text/csv`, not `text/plain`, so list the precise type (`text/csv`, `application/json`...).
+This detected type is also the one stored and sent as `Content-Type`.
+
+The dropzone only proposes and accepts the listed extensions, the server check remains the one that counts.
+
+A type unknown to `symfony/mime` (a typo like `image/jpg` for instance) makes `cache:clear` fail, since every file would be refused.
 
 Files already stored with another type are no longer displayed in the browser, only downloaded.
 
-> :warning: **Do not accept `image/svg+xml`, `text/html` or `application/xhtml+xml` on a configuration served inline:** they can run scripts on your domain.
+> :warning: **Do not accept `image/svg+xml`, `text/html` or `application/xhtml+xml` on a configuration served inline:** they could run scripts on your domain.
+> Files are sent with `Content-Security-Policy: sandbox` (except PDF, which browsers do not display in a sandbox), which blocks these scripts in current browsers, but do not rely on it alone.
 
 The check is also available in your own code:
 ```php

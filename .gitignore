@@ -1,3 +1,4 @@
 /vendor/
 /.phpcs-cache
 /node_modules
+/.phpunit.cache
