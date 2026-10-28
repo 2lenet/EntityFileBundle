@@ -29,6 +29,8 @@ onLoad(() => {
             ignoreHiddenFiles: false,
             previewTemplate: previewTemplate,
             maxFilesize: 2048,
+            // only a convenience, the server checks the type
+            acceptedFiles: form.dataset.acceptedFiles || null,
             thumbnail: function (file, dataUrl) {
 
                 for (let node of file.previewElement.querySelectorAll("[data-dz-remove]")) {

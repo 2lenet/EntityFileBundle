@@ -9,9 +9,20 @@ use Lle\EntityFileBundle\Exception\EntityFileException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Mime\MimeTypes;
 
 class EntityFileManager
 {
+    /** Types finfo returns when it cannot tell, the same list as league/mime-type-detection */
+    private const INCONCLUSIVE_MIME_TYPES = [
+        "application/x-empty",
+        "text/plain",
+        "text/x-asm",
+        "application/octet-stream",
+        "inode/x-empty",
+    ];
+
     private FilesystemOperator $storage;
 
     /** @var array<string, mixed> */
@@ -188,11 +199,85 @@ class EntityFileManager
                 break;
         }
 
-        $mimeType = $this->storage->mimeType($path);
+        // Same detection as isAllowed(), so that the stored type is the one that was checked
+        $mimeType = ($data instanceof File ? $this->guessMimeType($data) : null) ?? $this->storage->mimeType($path);
         $size = $this->storage->fileSize($path);
 
         $entityFile->setMimeType($mimeType);
         $entityFile->setSize($size);
+    }
+
+    /**
+     * Check a file against the "mime_types" option: its type (see guessMimeType()) must be accepted,
+     * and its extension must belong to one of the accepted types, not necessarily to its own type.
+     * Refuses both "photo.jpg" holding HTML and a JPEG named "photo.html".
+     *
+     * @param File $file the file to check
+     * @return bool
+     */
+    public function isAllowed(File $file): bool
+    {
+        if ($this->getMimeTypes() === []) {
+            return true;
+        }
+
+        $mimeType = $this->guessMimeType($file);
+
+        return $mimeType !== null
+            && $this->isAllowedMimeType($mimeType)
+            && in_array($this->getExtension($file), $this->getAllowedExtensions(), true);
+    }
+
+    /**
+     * Detect the type from the contents. When the contents are inconclusive (plain text, binary...),
+     * fall back to the extension: a CSV is "text/csv", not "text/plain".
+     *
+     * @param File $file the file to check
+     * @return string|null null if the contents could not be read, the extension alone is not trusted
+     */
+    public function guessMimeType(File $file): ?string
+    {
+        $mimeType = $file->getMimeType();
+
+        if ($mimeType !== null && in_array($mimeType, self::INCONCLUSIVE_MIME_TYPES, true)) {
+            $mimeType = MimeTypes::getDefault()->getMimeTypes($this->getExtension($file))[0] ?? $mimeType;
+        }
+
+        return $mimeType;
+    }
+
+    /**
+     * @param string $mimeType the MIME type to check
+     * @return bool true if the "mime_types" option is empty or contains this type
+     */
+    public function isAllowedMimeType(string $mimeType): bool
+    {
+        return $this->getMimeTypes() === [] || in_array(strtolower($mimeType), $this->getMimeTypes(), true);
+    }
+
+    /**
+     * @return string[] the extensions of the accepted MIME types, empty if every type is accepted
+     */
+    public function getAllowedExtensions(): array
+    {
+        $mimeTypes = MimeTypes::getDefault();
+
+        return array_values(array_unique(array_merge(
+            [],
+            ...array_map(fn (string $type) => $mimeTypes->getExtensions($type), $this->getMimeTypes())
+        )));
+    }
+
+    /** @return string[] lowercase, see Configuration */
+    private function getMimeTypes(): array
+    {
+        /** @var string[] */
+        return $this->config["mime_types"] ?? [];
+    }
+
+    private function getExtension(File $file): string
+    {
+        return strtolower($file instanceof UploadedFile ? $file->getClientOriginalExtension() : $file->getExtension());
     }
 
     protected function getStorage(string $configName): FilesystemOperator

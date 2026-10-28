@@ -36,6 +36,7 @@ class EntityFileBrickFactory extends AbstractBasicBrickFactory
 
         $resource = $brickConfigurator->getDataSource()->get($this->getRequest()->attributes->get("id"));
         $files = $this->getFiles($brickConfigurator->getConfigName(), $resource);
+        $extensions = $this->loader->get($brickConfigurator->getConfigName())->getAllowedExtensions();
 
         $view = new BrickView($brickConfigurator);
         $view
@@ -43,6 +44,8 @@ class EntityFileBrickFactory extends AbstractBasicBrickFactory
             ->setData([
                 "files" => $files,
                 "resource" => $resource,
+                // Dropzone format, empty if every type is accepted
+                "acceptedFiles" => implode(",", array_map(fn (string $extension) => "." . $extension, $extensions)),
             ])
             ->setConfig($brickConfigurator->getConfig($this->getRequest()));
 
