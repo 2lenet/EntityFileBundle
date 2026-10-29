@@ -162,6 +162,17 @@ operation_reports:
     role: "ROLE_OPERATOR"
 ```
 
+Uploading and deleting have their own roles, `role_write` and `role_delete`. Both default to `ROLE_USER`, and are independent of `role`:
+```yaml
+operation_reports:
+    # ...
+    role: "ROLE_USER"
+    role_write: "ROLE_OPERATOR"
+    role_delete: "ROLE_ADMIN"
+```
+
+`role_write` is checked against the entity the file is attached to, `role` and `role_delete` against the file itself (matters for a custom voter).
+
 * I want the files to be public !
 
 You can use "PUBLIC_ACCESS" in the `role` key.
@@ -180,11 +191,18 @@ zip_reports:
 
 ### Restrict accepted file types
 
-By default, the upload route accepts any file. List the accepted MIME types in the `mime_types` key:
+By default, the upload route only accepts `image/jpeg` (`jpg`, `jpeg`), `image/png`, `image/webp` and `application/pdf`. Change the accepted MIME types in the `mime_types` key:
 ```yaml
 seller_logos:
     # ...
     mime_types: ["image/jpeg", "image/png", "image/webp"]
+```
+
+Use an empty list to accept any file (be careful, see the warning below):
+```yaml
+seller_logos:
+    # ...
+    mime_types: []
 ```
 
 An uploaded file is then refused (HTTP 415, the message is shown in the dropzone) unless:

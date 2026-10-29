@@ -105,7 +105,7 @@ class EntityFileController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $this->denyAccessUnlessGranted($config["role"], $entityFile);
+        $this->denyAccessUnlessGranted($config["role_delete"], $entityFile);
 
         $manager->delete($entityFile);
 
@@ -135,7 +135,7 @@ class EntityFileController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $this->denyAccessUnlessGranted($config["role"], $entityFile);
+        $this->denyAccessUnlessGranted($config["role_delete"], $entityFile);
 
         $manager->delete($entityFile);
 
@@ -195,6 +195,8 @@ class EntityFileController extends AbstractController
         if (!$entity) {
             throw $this->createNotFoundException();
         }
+
+        $this->denyAccessUnlessGranted($config["role_write"], $entity);
 
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var UploadedFile $file */
