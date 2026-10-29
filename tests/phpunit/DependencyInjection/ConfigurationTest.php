@@ -16,11 +16,46 @@ class ConfigurationTest extends TestCase
         self::assertSame(["image/png", "text/csv"], $config["configurations"]["test"]["mime_types"]);
     }
 
-    public function testMimeTypesDefaultToEmpty(): void
+    public function testMimeTypesDefaultToImagesAndPdf(): void
     {
         $config = $this->process([]);
 
+        self::assertSame(
+            ["image/jpeg", "image/png", "image/webp", "application/pdf"],
+            $config["configurations"]["test"]["mime_types"]
+        );
+    }
+
+    public function testMimeTypesCanBeOverridden(): void
+    {
+        $config = $this->process(["mime_types" => ["text/csv"]]);
+
+        self::assertSame(["text/csv"], $config["configurations"]["test"]["mime_types"]);
+    }
+
+    public function testEmptyMimeTypesAcceptEveryType(): void
+    {
+        $config = $this->process(["mime_types" => []]);
+
         self::assertSame([], $config["configurations"]["test"]["mime_types"]);
+    }
+
+    public function testRolesDefaultToRoleUser(): void
+    {
+        $config = $this->process([])["configurations"]["test"];
+
+        self::assertSame("ROLE_USER", $config["role"]);
+        self::assertSame("ROLE_USER", $config["role_write"]);
+        self::assertSame("ROLE_USER", $config["role_delete"]);
+    }
+
+    public function testRolesAreIndependent(): void
+    {
+        $config = $this->process(["role_write" => "ROLE_EDITOR", "role_delete" => "ROLE_ADMIN"])["configurations"]["test"];
+
+        self::assertSame("ROLE_USER", $config["role"]);
+        self::assertSame("ROLE_EDITOR", $config["role_write"]);
+        self::assertSame("ROLE_ADMIN", $config["role_delete"]);
     }
 
     public function testUnknownMimeTypeIsRefused(): void
