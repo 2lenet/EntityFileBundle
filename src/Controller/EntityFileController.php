@@ -22,7 +22,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class EntityFileController extends AbstractController
 {
     // English message used as the translation key, so that it is also the message without translator
-    private const REFUSED_TYPE_MESSAGE = "This file type is not accepted. Accepted extensions: %extensions%.";
+    private const REFUSED_TYPE_MESSAGE = "This file type is not accepted.";
+    private const REFUSED_TYPE_WITH_EXTENSIONS_MESSAGE = "This file type is not accepted. Accepted extensions: %extensions%.";
 
     public function __construct(
         private EntityManagerInterface $em,
@@ -155,7 +156,7 @@ class EntityFileController extends AbstractController
         $fallbackName = $slugger->slug(pathinfo($name, PATHINFO_FILENAME))
             . ($extension ? "." . $extension : "");
 
-        // A file stored before its type was refused (see "mime_types") is only offered as a download
+        // A file stored before its type was refused (see "*_mime_types" options) is only offered as a download
         $allowed = $manager->isAllowedMimeType((string)$entityFile->getMimeType());
 
         $disposition = HeaderUtils::makeDisposition(
@@ -243,10 +244,13 @@ class EntityFileController extends AbstractController
      */
     private function getRefusedTypeResponse(EntityFileManager $manager): JsonResponse
     {
-        $parameters = ["%extensions%" => implode(", ", $manager->getAllowedExtensions())];
+        $extensions = $manager->getAllowedExtensions();
+        // With "excluded_mime_types", every extension but a long list is accepted: nothing useful to list
+        $id = $extensions === [] ? self::REFUSED_TYPE_MESSAGE : self::REFUSED_TYPE_WITH_EXTENSIONS_MESSAGE;
+        $parameters = ["%extensions%" => implode(", ", $extensions)];
         $message = $this->translator
-            ? $this->translator->trans(self::REFUSED_TYPE_MESSAGE, $parameters, "LleEntityFileBundle")
-            : strtr(self::REFUSED_TYPE_MESSAGE, $parameters);
+            ? $this->translator->trans($id, $parameters, "LleEntityFileBundle")
+            : strtr($id, $parameters);
 
         return new JsonResponse(["error" => $message], Response::HTTP_UNSUPPORTED_MEDIA_TYPE);
     }
