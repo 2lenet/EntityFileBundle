@@ -59,7 +59,7 @@ class ConfigurationTest extends TestCase
     #[DataProvider("provideBothMimeTypeLists")]
     public function testIncludedAndExcludedMimeTypesCannotBeUsedTogether(array $options): void
     {
-        $this->expectException(\LogicException::class);
+        $this->expectException(InvalidConfigurationException::class);
         $this->expectExceptionMessage("Configuration \"test\"");
 
         $this->process($options);

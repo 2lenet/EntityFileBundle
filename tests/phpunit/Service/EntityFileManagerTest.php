@@ -76,6 +76,12 @@ class EntityFileManagerTest extends TestCase
         yield "PHP" => [$php, "shell.php", false];
         yield "PHP named as an image" => [$php, "logo.png", false];
         yield "PHP with an extension unknown to symfony/mime" => [$php, "shell.phtml", false];
+        // finfo detects image/gif, only the extension refuses it
+        yield "GIF/PHP polyglot named .phtml" => ["GIF89a<?php system(\$_GET['c']); ?>", "shell.phtml", false];
+        yield "GIF/PHP polyglot named .phar" => ["GIF89a<?php system(\$_GET['c']); ?>", "shell.phar", false];
+        yield "image named .htaccess" => [$png, ".htaccess", false];
+        yield "image named as JSP" => [$png, "logo.jsp", false];
+        yield "XML" => ['<?xml version="1.0"?><html xmlns="http://www.w3.org/1999/xhtml"><script>alert(1)</script></html>', "page.xml", false];
         yield "image named as PHP" => [$png, "logo.php", false];
         yield "uppercase extension" => [$png, "LOGO.PHP", false];
         yield "SQL detected as text/plain, falls back to the extension" => ["DROP TABLE users;\n", "dump.sql", false];
@@ -134,6 +140,21 @@ class EntityFileManagerTest extends TestCase
         self::assertContains("php", $extensions);
         // symfony/mime lists "PL" next to "pl"
         self::assertSame(array_values(array_unique(array_map("strtolower", $extensions))), $extensions);
+
+        // extensions without a known type are refused whatever the excluded types
+        self::assertContains("phtml", $this->createManager([], ["text/html"])->getExcludedExtensions());
+        self::assertSame([], $this->createManager([], [])->getExcludedExtensions());
+    }
+
+    public function testPolyglotIsDetectedAsAnImage(): void
+    {
+        // the reason why DEFAULT_EXCLUDED_EXTENSIONS exists: the contents check alone accepts it
+        $manager = $this->createManager([], Configuration::DEFAULT_EXCLUDED_MIME_TYPES);
+        $file = $this->createUploadedFile("GIF89a<?php system(\$_GET['c']); ?>", "shell.phtml");
+
+        self::assertSame("image/gif", $manager->guessMimeType($file));
+        self::assertTrue($manager->isAllowedMimeType("image/gif"));
+        self::assertFalse($manager->isAllowed($file));
     }
 
     /**

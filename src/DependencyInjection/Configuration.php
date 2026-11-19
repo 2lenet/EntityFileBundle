@@ -8,6 +8,7 @@ use Lle\EntityFileBundle\Entity\EntityFile;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\Mime\MimeTypes;
 
@@ -48,7 +49,9 @@ class Configuration implements ConfigurationInterface
         "application/x-dosexec",
         "application/vnd.microsoft.portable-executable",
         "application/x-msdownload",
+        "application/x-msdos-program",
         "application/x-msi",
+        "application/x-ms-shortcut",
         "application/x-bat",
         "text/x-msdos-batch",
         "application/x-powershell",
@@ -58,6 +61,8 @@ class Configuration implements ConfigurationInterface
         "application/x-executable",
         "application/x-pie-executable",
         "application/x-sharedlib",
+        // macOS executables
+        "application/x-mach-binary",
         // Java
         "application/java-archive",
         "application/x-java-archive",
@@ -67,6 +72,41 @@ class Configuration implements ConfigurationInterface
         "image/svg+xml",
         "text/javascript",
         "application/javascript",
+        "application/x-javascript",
+        "text/jscript",
+        // XML with the XHTML namespace runs scripts like HTML
+        "application/xml",
+        "text/xml",
+        "application/xslt+xml",
+    ];
+
+    /**
+     * Extensions executed by a web server or the OS, refused with "excluded_mime_types", whatever the list.
+     * Most belong to no type known to symfony/mime, so excluding a type does not refuse them: a polyglot
+     * ("GIF89a<?php ...", detected as image/gif) named "shell.phtml" would otherwise be accepted.
+     */
+    public const DEFAULT_EXCLUDED_EXTENSIONS = [
+        // PHP
+        "php",
+        "php3",
+        "php4",
+        "php5",
+        "php7",
+        "php8",
+        "phps",
+        "phtml",
+        "pht",
+        "phar",
+        // Other server-side scripts
+        "cgi",
+        "asp",
+        "aspx",
+        "jsp",
+        // Windows scripts
+        "cmd",
+        "wsf",
+        // Apache configuration
+        "htaccess",
     ];
 
     public function getConfigTreeBuilder(): TreeBuilder
@@ -87,7 +127,7 @@ class Configuration implements ConfigurationInterface
                                     && $this->isDeclared($configuration, "included_mime_types")
                                     && $this->isDeclared($configuration, "excluded_mime_types")
                                 ) {
-                                    throw new \LogicException(sprintf(
+                                    throw new InvalidConfigurationException(sprintf(
                                         "Configuration \"%s\": \"included_mime_types\" and \"excluded_mime_types\""
                                         . " cannot be used together, declare only one of them.",
                                         $configuration["name"] ?? $name,

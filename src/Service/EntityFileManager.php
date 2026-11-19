@@ -4,6 +4,7 @@ namespace Lle\EntityFileBundle\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use League\Flysystem\FilesystemOperator;
+use Lle\EntityFileBundle\DependencyInjection\Configuration;
 use Lle\EntityFileBundle\Entity\EntityFileInterface;
 use Lle\EntityFileBundle\Exception\EntityFileException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -215,7 +216,8 @@ class EntityFileManager
      * Refuses both "photo.jpg" holding HTML and a JPEG named "photo.html".
      *
      * With "excluded_mime_types": its type must not be excluded, and its extension must not belong
-     * to an excluded type. Refuses both "photo.jpg" holding PHP and a JPEG named "photo.php".
+     * to an excluded type nor to Configuration::DEFAULT_EXCLUDED_EXTENSIONS. Refuses "photo.jpg" holding PHP,
+     * a JPEG named "photo.php" and a GIF holding PHP named "photo.phtml".
      *
      * @param File $file the file to check
      * @return bool
@@ -281,11 +283,19 @@ class EntityFileManager
     }
 
     /**
-     * @return string[] the extensions of the excluded MIME types, empty if an inclusion list is set
+     * @return string[] the extensions of the excluded MIME types and Configuration::DEFAULT_EXCLUDED_EXTENSIONS,
+     *                  empty if an inclusion list is set or the exclusion list is empty
      */
     public function getExcludedExtensions(): array
     {
-        return $this->getExtensions($this->getExcludedMimeTypes());
+        if ($this->getExcludedMimeTypes() === []) {
+            return [];
+        }
+
+        return array_values(array_unique(array_merge(
+            $this->getExtensions($this->getExcludedMimeTypes()),
+            Configuration::DEFAULT_EXCLUDED_EXTENSIONS,
+        )));
     }
 
     /**

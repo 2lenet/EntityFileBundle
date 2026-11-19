@@ -192,13 +192,13 @@ zip_reports:
 ### Restrict accepted file types
 
 Two options restrict the types the upload route accepts. **Declare only one of them**: a configuration declaring both
-throws a `LogicException`, even if one of the lists is empty.
+throws an `InvalidConfigurationException`, even if one of the lists is empty.
 
 #### Exclude types (default)
 
 `excluded_mime_types` lists the refused types, every other type is accepted.
 By default, it refuses executable and script types: PHP, SQL, shell, Python, Perl, Ruby, Windows and Linux executables, Java archives,
-and the types that run scripts in a browser (HTML, XHTML, SVG, JavaScript).
+macOS executables, and the types that run scripts in a browser (HTML, XHTML, SVG, JavaScript, XML).
 See `Configuration::DEFAULT_EXCLUDED_MIME_TYPES` for the complete list.
 
 Replace the list:
@@ -217,11 +217,17 @@ seller_logos:
 
 An uploaded file is then refused (HTTP 415, the message is shown in the dropzone) if:
 * its type is in the list,
-* or its extension belongs to one of the listed types (`php`, `sql`... here), even if its contents are of another type.
+* or its extension belongs to one of the listed types (`php`, `sql`... here), even if its contents are of another type,
+* or its extension is in `Configuration::DEFAULT_EXCLUDED_EXTENSIONS` (`phtml`, `phar`, `cgi`, `asp`, `jsp`, `htaccess`...),
+  whatever the list. These extensions are executed by a web server and most belong to no type known to `symfony/mime`:
+  a GIF holding PHP named `shell.phtml` is detected as `image/gif`, only its extension refuses it.
 
 Unlike `included_mime_types`, a type unknown to `symfony/mime` is accepted here: `finfo` detects types such as `text/x-php` or
 `text/x-shellscript`, which `symfony/mime` has no extension for. Such a type is only refused from the contents, so also list a type
-with extensions (`application/x-php` for `.php`). An extension that belongs to no known type (`.phtml`, `.phar`...) is not refused by itself.
+with extensions (`application/x-php` for `.php`).
+
+XML (`application/xml`, `text/xml`) is refused by default: served inline, an XML file with the XHTML namespace runs scripts.
+To accept XML files, replace the list without these types, and prefer `disposition: attachment`.
 
 The dropzone proposes every extension, the server check remains the one that counts.
 
