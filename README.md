@@ -152,7 +152,7 @@ Example: /lle-entity-file/seller_logos/1
 * lle_entityfile_entityfile_readbypath (requires configName and path)  
   Example: /lle-entity-file/seller_logos?path=2le.png
 
-A file is only found through the configuration it was uploaded with: its `role`, `disposition` and `mime_types` always apply.
+A file is only found through the configuration it was uploaded with: its `role`, `disposition`, `included_mime_types` and `excluded_mime_types` always apply.
 
 #### Protect your urls
 By default, only logged in users can access those urls. You can change the `role` key in the configuration:
@@ -191,36 +191,78 @@ zip_reports:
 
 ### Restrict accepted file types
 
-By default, the upload route only accepts `image/jpeg` (`jpg`, `jpeg`), `image/png`, `image/webp` and `application/pdf`. Change the accepted MIME types in the `mime_types` key:
+Two options restrict the types the upload route accepts. **Declare only one of them**: a configuration declaring both
+throws a `LogicException`, even if one of the lists is empty.
+
+#### Exclude types (default)
+
+`excluded_mime_types` lists the refused types, every other type is accepted.
+By default, it refuses executable and script types: PHP, SQL, shell, Python, Perl, Ruby, Windows and Linux executables, Java archives,
+and the types that run scripts in a browser (HTML, XHTML, SVG, JavaScript).
+See `Configuration::DEFAULT_EXCLUDED_MIME_TYPES` for the complete list.
+
+Replace the list:
 ```yaml
 seller_logos:
     # ...
-    mime_types: ["image/jpeg", "image/png", "image/webp"]
+    excluded_mime_types: ["text/x-php", "application/x-php", "application/sql"]
 ```
 
 Use an empty list to accept any file (be careful, see the warning below):
 ```yaml
 seller_logos:
     # ...
-    mime_types: []
+    excluded_mime_types: []
+```
+
+An uploaded file is then refused (HTTP 415, the message is shown in the dropzone) if:
+* its type is in the list,
+* or its extension belongs to one of the listed types (`php`, `sql`... here), even if its contents are of another type.
+
+Unlike `included_mime_types`, a type unknown to `symfony/mime` is accepted here: `finfo` detects types such as `text/x-php` or
+`text/x-shellscript`, which `symfony/mime` has no extension for. Such a type is only refused from the contents, so also list a type
+with extensions (`application/x-php` for `.php`). An extension that belongs to no known type (`.phtml`, `.phar`...) is not refused by itself.
+
+The dropzone proposes every extension, the server check remains the one that counts.
+
+#### Include types
+
+`included_mime_types` lists the accepted types, every other type is refused. The default exclusions no longer apply.
+```yaml
+seller_logos:
+    # ...
+    included_mime_types: ["image/jpeg", "image/png", "image/webp", "application/pdf"]
 ```
 
 An uploaded file is then refused (HTTP 415, the message is shown in the dropzone) unless:
 * its type is in the list,
-* and its extension belongs to one of the listed types (`jpg`, `jpeg`, `png`, `webp` here), not necessarily to its own type.
-
-The type is detected from the contents. When the contents are inconclusive (`text/plain`, `application/octet-stream`, empty file),
-the extension decides: a CSV is `text/csv`, not `text/plain`, so list the precise type (`text/csv`, `application/json`...).
-This detected type is also the one stored and sent as `Content-Type`.
+* and its extension belongs to one of the listed types (`jpg`, `jpeg`, `png`, `webp`, `pdf` here), not necessarily to its own type.
 
 The dropzone only proposes and accepts the listed extensions, the server check remains the one that counts.
 
 A type unknown to `symfony/mime` (a typo like `image/jpg` for instance) makes `cache:clear` fail, since every file would be refused.
 
-Files already stored with another type are no longer displayed in the browser, only downloaded.
+#### Detection
+
+The type is detected from the contents. When the contents are inconclusive (`text/plain`, `application/octet-stream`, empty file),
+the extension decides: a CSV is `text/csv`, not `text/plain`, so list the precise type (`text/csv`, `application/json`...).
+This detected type is also the one stored and sent as `Content-Type`.
+
+Files already stored with a type that is no longer accepted are no longer displayed in the browser, only downloaded.
 
 > :warning: **Do not accept `image/svg+xml`, `text/html` or `application/xhtml+xml` on a configuration served inline:** they could run scripts on your domain.
-> Files are sent with `Content-Security-Policy: sandbox` (except PDF, which browsers do not display in a sandbox), which blocks these scripts in current browsers, but do not rely on it alone.
+> They are excluded by default. Files are sent with `Content-Security-Policy: sandbox` (except PDF, which browsers do not display in a sandbox),
+> which blocks these scripts in current browsers, but do not rely on it alone.
+
+#### Upgrade from 1.3
+
+The `mime_types` option is replaced by `included_mime_types`. Without it, a configuration no longer accepts only images and PDF:
+it accepts everything but the default exclusions. To keep the previous behavior:
+```yaml
+seller_logos:
+    # ...
+    included_mime_types: ["image/jpeg", "image/png", "image/webp", "application/pdf"]
+```
 
 The check is also available in your own code:
 ```php

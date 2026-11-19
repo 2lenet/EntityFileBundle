@@ -208,24 +208,35 @@ class EntityFileManager
     }
 
     /**
-     * Check a file against the "mime_types" option: its type (see guessMimeType()) must be accepted,
-     * and its extension must belong to one of the accepted types, not necessarily to its own type.
+     * Check a file against the "included_mime_types" or "excluded_mime_types" option.
+     *
+     * With "included_mime_types": its type (see guessMimeType()) must be included, and its extension
+     * must belong to one of the included types, not necessarily to its own type.
      * Refuses both "photo.jpg" holding HTML and a JPEG named "photo.html".
+     *
+     * With "excluded_mime_types": its type must not be excluded, and its extension must not belong
+     * to an excluded type. Refuses both "photo.jpg" holding PHP and a JPEG named "photo.php".
      *
      * @param File $file the file to check
      * @return bool
      */
     public function isAllowed(File $file): bool
     {
-        if ($this->getMimeTypes() === []) {
+        if ($this->getIncludedMimeTypes() === [] && $this->getExcludedMimeTypes() === []) {
             return true;
         }
 
         $mimeType = $this->guessMimeType($file);
 
-        return $mimeType !== null
-            && $this->isAllowedMimeType($mimeType)
-            && in_array($this->getExtension($file), $this->getAllowedExtensions(), true);
+        if ($mimeType === null || !$this->isAllowedMimeType($mimeType)) {
+            return false;
+        }
+
+        $extension = $this->getExtension($file);
+
+        return $this->getIncludedMimeTypes() !== []
+            ? in_array($extension, $this->getAllowedExtensions(), true)
+            : !in_array($extension, $this->getExcludedExtensions(), true);
     }
 
     /**
@@ -248,31 +259,61 @@ class EntityFileManager
 
     /**
      * @param string $mimeType the MIME type to check
-     * @return bool true if the "mime_types" option is empty or contains this type
+     * @return bool true if this type is included, or not excluded when no inclusion list is set
      */
     public function isAllowedMimeType(string $mimeType): bool
     {
-        return $this->getMimeTypes() === [] || in_array(strtolower($mimeType), $this->getMimeTypes(), true);
+        $mimeType = strtolower($mimeType);
+
+        if ($this->getIncludedMimeTypes() !== []) {
+            return in_array($mimeType, $this->getIncludedMimeTypes(), true);
+        }
+
+        return !in_array($mimeType, $this->getExcludedMimeTypes(), true);
     }
 
     /**
-     * @return string[] the extensions of the accepted MIME types, empty if every type is accepted
+     * @return string[] the extensions of the included MIME types, empty if no inclusion list is set
      */
     public function getAllowedExtensions(): array
     {
-        $mimeTypes = MimeTypes::getDefault();
+        return $this->getExtensions($this->getIncludedMimeTypes());
+    }
 
-        return array_values(array_unique(array_merge(
+    /**
+     * @return string[] the extensions of the excluded MIME types, empty if an inclusion list is set
+     */
+    public function getExcludedExtensions(): array
+    {
+        return $this->getExtensions($this->getExcludedMimeTypes());
+    }
+
+    /**
+     * @param string[] $mimeTypes
+     * @return string[] lowercase
+     */
+    private function getExtensions(array $mimeTypes): array
+    {
+        $knownTypes = MimeTypes::getDefault();
+
+        return array_values(array_unique(array_map("strtolower", array_merge(
             [],
-            ...array_map(fn (string $type) => $mimeTypes->getExtensions($type), $this->getMimeTypes())
-        )));
+            ...array_map(fn (string $type) => $knownTypes->getExtensions($type), $mimeTypes)
+        ))));
     }
 
     /** @return string[] lowercase, see Configuration */
-    private function getMimeTypes(): array
+    private function getIncludedMimeTypes(): array
     {
         /** @var string[] */
-        return $this->config["mime_types"] ?? [];
+        return $this->config["included_mime_types"] ?? [];
+    }
+
+    /** @return string[] lowercase, empty if an inclusion list is set, see Configuration */
+    private function getExcludedMimeTypes(): array
+    {
+        /** @var string[] */
+        return $this->config["excluded_mime_types"] ?? [];
     }
 
     private function getExtension(File $file): string

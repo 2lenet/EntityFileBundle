@@ -44,7 +44,7 @@ class EntityFileBrickFactory extends AbstractBasicBrickFactory
             ->setData([
                 "files" => $files,
                 "resource" => $resource,
-                // Dropzone format, empty if every type is accepted
+                // Dropzone format, empty without "included_mime_types": Dropzone cannot exclude, the server checks
                 "acceptedFiles" => implode(",", array_map(fn (string $extension) => "." . $extension, $extensions)),
             ])
             ->setConfig($brickConfigurator->getConfig($this->getRequest()));
