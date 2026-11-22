@@ -8,7 +8,7 @@ on:
 
 jobs:
     phpstan:
-        name: "PHPStan ${{ matrix.php-version }}"
+        name: "PHPStan ${{ matrix.php_version }}"
 
         runs-on: ubuntu-latest
         strategy:
@@ -16,7 +16,7 @@ jobs:
                 php_version: [8.4]
 
         steps:
-            -   uses: actions/checkout@v2
+            -   uses: actions/checkout@v5
 
             -   name: "Install dependencies with Composer"
                 uses: php-actions/composer@v6
