@@ -11,5 +11,25 @@
     "dictRemoveFile": "Remove",
     "dictRemoveFileConfirmation": "Are you sure you want to remove this file ?",
     "dictMaxFilesExceeded": "Maximum amount of files reached.",
-    "dictDownloadFile": "Download"
+    "dictDownloadFile": "Download",
+    "folders": {
+        "root": "Documents",
+        "newFolder": "New folder",
+        "folderName": "Folder name",
+        "rename": "Rename",
+        "deleteFolder": "Delete folder",
+        "confirmDelete": "Confirm deletion",
+        "confirmDeleteContents": "Delete with all its contents?",
+        "save": "Save",
+        "cancel": "Cancel",
+        "uploadInProgress": "An upload is in progress, wait for it to end before changing folders.",
+        "error": "An error occurred."
+    },
+    "files": {
+        "preview": "Preview",
+        "close": "Close",
+        "copyLink": "Copy the public link",
+        "linkCopied": "Link copied",
+        "copyError": "The link could not be copied"
+    }
 }

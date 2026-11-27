@@ -23,6 +23,8 @@ jobs:
                 with:
                     php-version: ${{ matrix.php_version }}
                     coverage: none
+                    # PDF thumbnails (EntityFileThumbnailTest), with the Ghostscript of the runner
+                    extensions: imagick
 
             -   name: "Install dependencies with Composer"
                 run: composer install --no-interaction --no-progress

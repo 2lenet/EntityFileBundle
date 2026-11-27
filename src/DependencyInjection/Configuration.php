@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lle\EntityFileBundle\DependencyInjection;
 
 use Lle\EntityFileBundle\Entity\EntityFile;
+use Lle\EntityFileBundle\Entity\FolderAwareEntityFileInterface;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
@@ -144,6 +145,21 @@ class Configuration implements ConfigurationInterface
                             ->ifTrue(fn (array $configuration) => $configuration["included_mime_types"] !== [])
                             ->then(fn (array $configuration) => ["excluded_mime_types" => []] + $configuration)
                         ->end()
+                        ->validate()
+                            ->ifTrue(fn (array $configuration) => $configuration["folders"]
+                                && !is_a($configuration["entity_file_class"], FolderAwareEntityFileInterface::class, true))
+                            ->then(fn (array $configuration) => throw new InvalidConfigurationException(sprintf(
+                                "\"folders\" needs an \"entity_file_class\" implementing %s, \"%s\" does not.",
+                                FolderAwareEntityFileInterface::class,
+                                $configuration["entity_file_class"],
+                            )))
+                        ->end()
+                        ->validate()
+                            ->ifTrue(fn (array $configuration) => !$configuration["folders"] && $configuration["default_folders"] !== [])
+                            ->then(fn () => throw new InvalidConfigurationException(
+                                "\"default_folders\" needs \"folders: true\"."
+                            ))
+                        ->end()
                         ->children()
                             ->scalarNode("class")->isRequired()->end()
                             ->scalarNode("storage_adapter")->defaultValue(self::DEFAULT_STORAGE_ADAPTER)->end()
@@ -152,6 +168,18 @@ class Configuration implements ConfigurationInterface
                             ->scalarNode("role_write")->defaultValue(self::DEFAULT_ROLE)->end()
                             ->scalarNode("role_delete")->defaultValue(self::DEFAULT_ROLE)->end()
                             ->scalarNode("disposition")->defaultValue(HeaderUtils::DISPOSITION_INLINE)->end()
+                            // Public link of each file, readable without logging in (no expiry)
+                            ->booleanNode("public_links")->defaultFalse()->end()
+                            // Creating a public link, checked against the entity
+                            ->scalarNode("role_public_link")->defaultValue(self::DEFAULT_ROLE)->end()
+                            // Image of the first page of PDF files, needs the imagick extension and Ghostscript
+                            ->booleanNode("thumbnails")->defaultFalse()->end()
+                            // Files can be sorted in folders, needs a FolderAwareEntityFileInterface file class
+                            ->booleanNode("folders")->defaultFalse()->end()
+                            // Root folders created for every entity
+                            ->arrayNode("default_folders")
+                                ->scalarPrototype()->cannotBeEmpty()->end()
+                            ->end()
                             // Only these types are accepted, empty: no inclusion list.
                             // An unknown type has no extension, so every file would be refused.
                             ->append($this->createMimeTypesNode("included_mime_types", [], true))

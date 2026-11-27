@@ -8,6 +8,10 @@
 </script>
 <div class="card shadow mb-4">
     <div class="card-body">
+        {% if view.data.listing.foldersEnabled %}
+            {# Filled by app.js: breadcrumb, folder actions and the folders of the current folder #}
+            <div class="lle-entity-folders" data-dropzone="lle-entityfile-dropzone-{{ view.id }}"></div>
+        {% endif %}
         <form
                 action="{{ path('lle_entityfile_entityfile_addfile', {
                     configName: view.config.configName,
@@ -16,6 +20,7 @@
                 id="lle-entityfile-dropzone-{{ view.id }}"
                 class="dropzone lle-entity-dropzone"
                 data-files="{{ view.data.files | json_encode }}"
+                data-listing="{{ view.data.listing | json_encode }}"
                 data-accepted-files="{{ view.data.acceptedFiles }}"
                 data-locale={{ app.request.locale }}
         ></form>

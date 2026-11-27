@@ -302,6 +302,128 @@ $this->em->flush();
 
 > :warning: **Never forget to flush the EntityFile.**
 
+### Folders
+
+The files of a configuration can be sorted in folders and subfolders. Folders only exist in the database
+(table `lle_entity_file_folder`): renaming or moving a folder does not move the stored files.
+
+Folders need a file class with a `folder` relation. Declare one in your project, with its own table:
+
+```php
+#[ORM\Entity]
+class ContractFile implements FolderAwareEntityFileInterface
+{
+    use EntityFileTrait;
+    use EntityFileFolderTrait;
+    use TimestampableEntity;
+    use BlameableEntity;
+
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: "integer")]
+    private ?int $id = null;
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+}
+```
+
+```yaml
+contracts:
+    class: App\Entity\Customer
+    entity_file_class: App\Entity\ContractFile
+    folders: true
+    # optional, root folders created for every entity
+    default_folders: ["Contracts", "Offers"]
+```
+
+`folders: true` with a file class that does not implement `FolderAwareEntityFileInterface` throws an
+`InvalidConfigurationException`. Without `folders`, nothing changes: the default `EntityFile` has no folder.
+
+```php
+$manager = $entityFileLoader->get("contracts");
+
+$contracts = $manager->createFolder($customer, "Contracts");     // persisted, not flushed
+$year = $manager->createFolder($customer, "2026", $contracts);
+$file = $manager->save($customer, $data, "contract.pdf", $year);
+$this->em->persist($file);
+$this->em->flush();
+
+$manager->getFolders($customer);            // every folder, sorted by name
+$manager->getFiles($customer, $year);       // files directly in a folder, null for the root
+$manager->get($customer);                   // every file, whatever its folder
+
+$manager->renameFolder($year, "2027");      // flush to save
+$manager->moveFolder($year, null);          // to the root, flush to save
+$manager->moveToFolder($file, $contracts);  // flush to save
+$manager->deleteFolder($contracts);         // refused if not empty, flushes
+$manager->deleteFolder($contracts, true);   // with its subfolders and files (stored files included)
+```
+
+A refused operation (invalid or duplicate name, folder moved into itself, folder of another entity...) throws an
+`EntityFileFolderException`, whose message is a translation key of the `LleEntityFileBundle` domain.
+
+The Crudit brick then shows a breadcrumb, the folders of the current folder, and only the files of the current folder.
+Files dropped in the dropzone go to the current folder; files and folders are moved by dragging them onto a folder
+or onto the breadcrumb. Creating, renaming and moving need `role_write`, deleting needs `role_delete`, both checked
+against the entity. When `symfony/security-csrf` is installed, the folder routes also check a CSRF token
+(header `X-CSRF-Token`, token id `lle_entity_file`).
+
+### Public links
+
+```yaml
+contracts:
+    # ...
+    public_links: true
+    role_public_link: "ROLE_CONTRACT_SHARE"   # creating a link, checked against the entity (default ROLE_USER)
+```
+
+Each file then gets a "copy the public link" button in the brick. The link is created the first time (random token,
+table `lle_entity_file_public_link`), then reused: anyone who has it reads the file **without logging in, with no
+expiry**. Deleting the file, or disabling `public_links`, makes it stop working.
+
+The public route must be opened to anonymous users, before your other rules:
+
+```yaml
+# config/packages/security.yaml
+access_control:
+    - { path: ^/lle-entity-file-public/, roles: PUBLIC_ACCESS }
+```
+
+```php
+$link = $manager->getPublicLink($file);   // persisted, flush to save it
+$url = $urlGenerator->generate("lle_entityfile_public_read", ["token" => $link->getToken()], UrlGeneratorInterface::ABSOLUTE_URL);
+```
+
+### Previews and thumbnails
+
+In the brick, PDF files and images (not SVG) have a preview button: they open in a window, displayed by the browser even
+with `disposition: attachment` (read routes with `?preview=1`). Files without thumbnail show the icon of their type.
+
+```yaml
+contracts:
+    # ...
+    thumbnails: true
+```
+
+PDF files then show their first page. The thumbnail is generated the first time it is displayed, with the `imagick`
+extension and Ghostscript, and kept in the storage (`<configName>/.thumbnails/<file id>.jpg`, deleted with the file).
+Without `imagick`, or for an unreadable PDF, the icon stays.
+
+> :warning: Ghostscript reads PDF files uploaded by your users: keep it up to date. It runs with `-dSAFER` by default
+> since 9.50, and the ImageMagick policy (`policy.xml`) must allow the `PDF` coder.
+
+#### Upgrade to 1.4
+
+The bundle maps two new entities, `EntityFileFolder` and `EntityFilePublicLink`: generate a migration
+(`bin/console make:migration`), even if you use neither folders nor public links, or `doctrine:schema:validate` reports
+the missing tables `lle_entity_file_folder` and `lle_entity_file_public_link`.
+
+The read routes no longer call `exit()` after sending the file: `kernel.terminate` listeners now run after a download.
+The `lle_entity_file` table does not change.
+
 ### Exception handling
 
 https://flysystem.thephpleague.com/docs/usage/exception-handling/

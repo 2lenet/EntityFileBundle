@@ -8,6 +8,11 @@
             "Lle\\EntityFileBundle\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Lle\\EntityFileBundle\\Tests\\": "tests/phpunit/"
+        }
+    },
     "authors": [
         {
             "name": "2LE"
@@ -22,7 +27,11 @@
         "gedmo/doctrine-extensions": "^3.7",
         "symfony/form": "^7.0 || ^8.0",
         "symfony/mime": "^7.0 || ^8.0",
+        "symfony/security-core": "^7.0 || ^8.0",
         "symfony/translation-contracts": "^3.0"
+    },
+    "suggest": {
+        "symfony/security-csrf": "Checks a CSRF token on the folder routes"
     },
     "require-dev": {
         "phpstan/phpstan": "^2.0",
@@ -32,7 +41,8 @@
         "phpstan/phpstan-symfony": "^2.0",
         "squizlabs/php_codesniffer": "^3.6",
         "slevomat/coding-standard": "^7.1",
-        "phpunit/phpunit": "^10.5"
+        "phpunit/phpunit": "^10.5",
+        "symfony/security-csrf": "^7.0 || ^8.0"
     },
     "config": {
         "allow-plugins": {
