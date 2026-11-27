@@ -68,6 +68,49 @@ class EntityFileListingTest extends TestCase
         self::assertSame("route:lle_entityfile_folder_movefile", $listing["files"][0]["moveUrl"]);
     }
 
+    public function testFilesCarryTheirPreviewThumbnailAndPublicLinkUrls(): void
+    {
+        $document = $this->document();
+        $manager = $this->manager();
+        $pdf = $manager->save($document, "%PDF-1.4", "contract.pdf");
+        $pdf->setMimeType("application/pdf");
+        $text = $manager->save($document, "hello", "notes.txt");
+        $this->em->persist($pdf);
+        $this->em->persist($text);
+        $this->em->flush();
+
+        $listing = $this->listing()->getListing(self::CONFIG, $document);
+
+        $files = array_column($listing["files"], null, "name");
+        self::assertTrue($listing["canSharePublicLink"]);
+        self::assertSame("application/pdf", $files["contract.pdf"]["mimeType"]);
+        self::assertSame("route:lle_entityfile_entityfile_readbypath", $files["contract.pdf"]["previewUrl"]);
+        self::assertSame("route:lle_entityfile_file_publiclink", $files["contract.pdf"]["publicLinkUrl"]);
+        self::assertSame(
+            extension_loaded("imagick") ? "route:lle_entityfile_file_thumbnail" : null,
+            $files["contract.pdf"]["thumbnailUrl"],
+        );
+        self::assertNull($files["notes.txt"]["previewUrl"]);
+        self::assertNull($files["notes.txt"]["thumbnailUrl"]);
+    }
+
+    public function testAFlatConfigurationHasNoPublicLinkNorThumbnail(): void
+    {
+        $document = $this->document();
+        $manager = $this->manager(self::FLAT_CONFIG);
+        $file = $manager->save($document, "%PDF-1.4", "contract.pdf");
+        $file->setMimeType("application/pdf");
+        $this->em->persist($file);
+        $this->em->flush();
+
+        $listing = $this->listing()->getListing(self::FLAT_CONFIG, $document);
+
+        self::assertFalse($listing["canSharePublicLink"]);
+        self::assertNull($listing["files"][0]["publicLinkUrl"]);
+        self::assertNull($listing["files"][0]["thumbnailUrl"]);
+        self::assertNotNull($listing["files"][0]["previewUrl"]);
+    }
+
     public function testFilesTheUserCannotReadAreHidden(): void
     {
         $document = $this->document();

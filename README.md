@@ -371,10 +371,57 @@ or onto the breadcrumb. Creating, renaming and moving need `role_write`, deletin
 against the entity. When `symfony/security-csrf` is installed, the folder routes also check a CSRF token
 (header `X-CSRF-Token`, token id `lle_entity_file`).
 
+### Public links
+
+```yaml
+contracts:
+    # ...
+    public_links: true
+    role_public_link: "ROLE_CONTRACT_SHARE"   # creating a link, checked against the entity (default ROLE_USER)
+```
+
+Each file then gets a "copy the public link" button in the brick. The link is created the first time (random token,
+table `lle_entity_file_public_link`), then reused: anyone who has it reads the file **without logging in, with no
+expiry**. Deleting the file, or disabling `public_links`, makes it stop working.
+
+The public route must be opened to anonymous users, before your other rules:
+
+```yaml
+# config/packages/security.yaml
+access_control:
+    - { path: ^/lle-entity-file-public/, roles: PUBLIC_ACCESS }
+```
+
+```php
+$link = $manager->getPublicLink($file);   // persisted, flush to save it
+$url = $urlGenerator->generate("lle_entityfile_public_read", ["token" => $link->getToken()], UrlGeneratorInterface::ABSOLUTE_URL);
+```
+
+### Previews and thumbnails
+
+In the brick, PDF files and images (not SVG) have a preview button: they open in a window, displayed by the browser even
+with `disposition: attachment` (read routes with `?preview=1`). Files without thumbnail show the icon of their type.
+
+```yaml
+contracts:
+    # ...
+    thumbnails: true
+```
+
+PDF files then show their first page. The thumbnail is generated the first time it is displayed, with the `imagick`
+extension and Ghostscript, and kept in the storage (`<configName>/.thumbnails/<file id>.jpg`, deleted with the file).
+Without `imagick`, or for an unreadable PDF, the icon stays.
+
+> :warning: Ghostscript reads PDF files uploaded by your users: keep it up to date. It runs with `-dSAFER` by default
+> since 9.50, and the ImageMagick policy (`policy.xml`) must allow the `PDF` coder.
+
 #### Upgrade to 1.4
 
-The bundle maps a new entity, `EntityFileFolder`: generate a migration (`bin/console make:migration`), even if you do
-not use folders, or `doctrine:schema:validate` reports the missing table `lle_entity_file_folder`.
+The bundle maps two new entities, `EntityFileFolder` and `EntityFilePublicLink`: generate a migration
+(`bin/console make:migration`), even if you use neither folders nor public links, or `doctrine:schema:validate` reports
+the missing tables `lle_entity_file_folder` and `lle_entity_file_public_link`.
+
+The read routes no longer call `exit()` after sending the file: `kernel.terminate` listeners now run after a download.
 The `lle_entity_file` table does not change.
 
 ### Exception handling

@@ -168,6 +168,12 @@ class Configuration implements ConfigurationInterface
                             ->scalarNode("role_write")->defaultValue(self::DEFAULT_ROLE)->end()
                             ->scalarNode("role_delete")->defaultValue(self::DEFAULT_ROLE)->end()
                             ->scalarNode("disposition")->defaultValue(HeaderUtils::DISPOSITION_INLINE)->end()
+                            // Public link of each file, readable without logging in (no expiry)
+                            ->booleanNode("public_links")->defaultFalse()->end()
+                            // Creating a public link, checked against the entity
+                            ->scalarNode("role_public_link")->defaultValue(self::DEFAULT_ROLE)->end()
+                            // Image of the first page of PDF files, needs the imagick extension and Ghostscript
+                            ->booleanNode("thumbnails")->defaultFalse()->end()
                             // Files can be sorted in folders, needs a FolderAwareEntityFileInterface file class
                             ->booleanNode("folders")->defaultFalse()->end()
                             // Root folders created for every entity

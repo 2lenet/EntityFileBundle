@@ -4,7 +4,7 @@
 const FILE_DRAG_TYPE = "application/x-lle-entity-file";
 const FOLDER_DRAG_TYPE = "application/x-lle-entity-folder";
 
-export function initFolders(container, dropzone, listing, messages) {
+export function initFolders(container, dropzone, listing, messages, showExistingFile) {
     let state = listing;
     let currentId = null;
 
@@ -238,8 +238,7 @@ export function initFolders(container, dropzone, listing, messages) {
 
         for (const listed of filesOf(currentId)) {
             const file = {...listed};
-            dropzone.displayExistingFile(file, file.url, null, null, file.resizeThumbnail);
-            dropzone.files.push(file);
+            showExistingFile(file);
             makeDraggable(file);
         }
         dropzone.element.classList.toggle("dz-started", dropzone.files.length > 0);
@@ -261,8 +260,6 @@ export function initFolders(container, dropzone, listing, messages) {
     // Other files may still be uploading: only the folders are rendered again (counts)
     dropzone.on("success", (file, responseData) => {
         state.files.push(responseData);
-        file.path = responseData.path;
-        file.moveUrl = responseData.moveUrl;
         makeDraggable(file);
         renderFolderTree();
     });

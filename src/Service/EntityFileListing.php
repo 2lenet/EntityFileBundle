@@ -2,6 +2,7 @@
 
 namespace Lle\EntityFileBundle\Service;
 
+use Lle\EntityFileBundle\Controller\EntityFileController;
 use Lle\EntityFileBundle\Entity\EntityFileFolder;
 use Lle\EntityFileBundle\Entity\EntityFileInterface;
 use Lle\EntityFileBundle\Entity\FolderAwareEntityFileInterface;
@@ -16,6 +17,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 class EntityFileListing
 {
     public const CSRF_TOKEN_ID = "lle_entity_file";
+    public const CSRF_HEADER = "X-CSRF-Token";
 
     public function __construct(
         private EntityFileLoader $loader,
@@ -69,6 +71,8 @@ class EntityFileListing
             // Folders are changed with the rights on the files, checked against the entity
             "canWrite" => $this->authorizationChecker->isGranted($config["role_write"], $entity),
             "canDelete" => $this->authorizationChecker->isGranted($config["role_delete"], $entity),
+            "canSharePublicLink" => $manager->hasPublicLinks()
+                && $this->authorizationChecker->isGranted($config["role_public_link"], $entity),
         ];
     }
 
@@ -77,8 +81,15 @@ class EntityFileListing
      */
     public function getFileRow(string $configName, EntityFileInterface $file): array
     {
-        $isImage = str_starts_with((string)$file->getMimeType(), "image/");
+        $manager = $this->loader->get($configName);
+        $mimeType = (string)$file->getMimeType();
+        $isImage = str_starts_with($mimeType, "image/");
         $folder = $file instanceof FolderAwareEntityFileInterface ? $file->getFolder() : null;
+        $fileParameters = [
+            "configName" => $configName,
+            "id" => $file->getEntityId(),
+            "fileId" => method_exists($file, "getId") ? $file->getId() : null,
+        ];
 
         $row = [
             "url" => $this->urlGenerator->generate("lle_entityfile_entityfile_readbypath", [
@@ -95,14 +106,26 @@ class EntityFileListing
             "resizeThumbnail" => $isImage,
             "disablePreview" => !$isImage,
             "folderId" => $folder?->getId(),
+            "mimeType" => $mimeType,
+            // Displayed in the browser, even with "disposition: attachment"
+            "previewUrl" => EntityFileStreamer::isPreviewable($mimeType) && $manager->isAllowedMimeType($mimeType)
+                ? $this->urlGenerator->generate("lle_entityfile_entityfile_readbypath", [
+                    "configName" => $configName,
+                    "path" => $file->getPath(),
+                    EntityFileController::PARAMETER_PREVIEW => 1,
+                ])
+                : null,
+            "thumbnailUrl" => $manager->canThumbnail($file)
+                ? $this->urlGenerator->generate("lle_entityfile_file_thumbnail", $fileParameters)
+                : null,
+            // Creates the link when called, see EntityFileLinkController
+            "publicLinkUrl" => $manager->hasPublicLinks() && $fileParameters["fileId"] !== null
+                ? $this->urlGenerator->generate("lle_entityfile_file_publiclink", $fileParameters)
+                : null,
         ];
 
         if ($file instanceof FolderAwareEntityFileInterface && method_exists($file, "getId")) {
-            $row["moveUrl"] = $this->urlGenerator->generate("lle_entityfile_folder_movefile", [
-                "configName" => $configName,
-                "id" => $file->getEntityId(),
-                "fileId" => $file->getId(),
-            ]);
+            $row["moveUrl"] = $this->urlGenerator->generate("lle_entityfile_folder_movefile", $fileParameters);
         }
 
         return $row;

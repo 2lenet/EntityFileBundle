@@ -24,5 +24,12 @@
         "cancel": "Cancel",
         "uploadInProgress": "An upload is in progress, wait for it to end before changing folders.",
         "error": "An error occurred."
+    },
+    "files": {
+        "preview": "Preview",
+        "close": "Close",
+        "copyLink": "Copy the public link",
+        "linkCopied": "Link copied",
+        "copyError": "The link could not be copied"
     }
 }

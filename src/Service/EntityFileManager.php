@@ -7,9 +7,10 @@ use League\Flysystem\FilesystemOperator;
 use Lle\EntityFileBundle\DependencyInjection\Configuration;
 use Lle\EntityFileBundle\Entity\EntityFileFolder;
 use Lle\EntityFileBundle\Entity\EntityFileInterface;
+use Lle\EntityFileBundle\Entity\EntityFilePublicLink;
 use Lle\EntityFileBundle\Entity\FolderAwareEntityFileInterface;
-use Lle\EntityFileBundle\Exception\EntityFileFolderException;
 use Lle\EntityFileBundle\Exception\EntityFileException;
+use Lle\EntityFileBundle\Exception\EntityFileFolderException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpFoundation\File\File;
@@ -18,6 +19,11 @@ use Symfony\Component\Mime\MimeTypes;
 
 class EntityFileManager
 {
+    private const THUMBNAIL_DIRECTORY = ".thumbnails";
+    private const THUMBNAIL_WIDTH = 240;
+    private const THUMBNAIL_QUALITY = 80;
+    private const PDF_MIME_TYPE = "application/pdf";
+
     /** Types finfo returns when it cannot tell, the same list as league/mime-type-detection */
     private const INCONCLUSIVE_MIME_TYPES = [
         "application/x-empty",
@@ -136,9 +142,7 @@ class EntityFileManager
      */
     public function delete(EntityFileInterface $entityFile): void
     {
-        $this->storage->delete($this->configName . "/" . $entityFile->getPath());
-
-        $this->em->remove($entityFile);
+        $this->removeFile($entityFile);
         $this->em->flush();
     }
 
@@ -195,6 +199,8 @@ class EntityFileManager
     public function write(EntityFileInterface $entityFile, $data): void
     {
         $path = $this->configName . "/" . $entityFile->getPath();
+        // The contents change: the thumbnail is generated again
+        $this->deleteThumbnail($entityFile);
 
         switch (true) {
             case is_resource($data):
@@ -569,8 +575,7 @@ class EntityFileManager
         }
 
         foreach ($files as $file) {
-            $this->storage->delete($this->configName . "/" . $file->getPath());
-            $this->em->remove($file);
+            $this->removeFile($file);
         }
 
         // Deepest first, so that no folder is removed before its subfolders
@@ -605,6 +610,165 @@ class EntityFileManager
         }
 
         $entityFile->setFolder($folder);
+    }
+
+    /**
+     * @return bool true if the files of this configuration can have a public link ("public_links" option)
+     */
+    public function hasPublicLinks(): bool
+    {
+        return (bool)($this->config["public_links"] ?? false);
+    }
+
+    /**
+     * Public link of a file, created (persisted, flush to save it) the first time.
+     * Anyone with its token reads the file without logging in, see EntityFilePublicLinkResolver.
+     *
+     * @param EntityFileInterface $entityFile a saved file
+     * @return EntityFilePublicLink
+     * @throws EntityFileException if public links are not enabled, or the file is not saved
+     */
+    public function getPublicLink(EntityFileInterface $entityFile): EntityFilePublicLink
+    {
+        $fileId = $this->getFileId($entityFile);
+
+        if (!$this->hasPublicLinks() || $fileId === null) {
+            throw new EntityFileException("Public links are not enabled for configuration '$this->configName'.");
+        }
+
+        $link = $this->em->getRepository(EntityFilePublicLink::class)->findOneBy([
+            "configName" => $this->configName,
+            "fileId" => $fileId,
+        ]);
+
+        if ($link === null) {
+            $link = (new EntityFilePublicLink())
+                ->setConfigName($this->configName)
+                ->setFileId($fileId)
+                ->setToken(rtrim(strtr(base64_encode(random_bytes(32)), "+/", "-_"), "="));
+            $this->em->persist($link);
+        }
+
+        return $link;
+    }
+
+    /**
+     * @return bool true if PDF files of this configuration have a thumbnail ("thumbnails" option)
+     */
+    public function hasThumbnails(): bool
+    {
+        return (bool)($this->config["thumbnails"] ?? false);
+    }
+
+    /**
+     * @return bool true if a thumbnail can be generated for this file (a PDF, with the imagick extension)
+     */
+    public function canThumbnail(EntityFileInterface $entityFile): bool
+    {
+        return $this->hasThumbnails()
+            && $entityFile->getMimeType() === self::PDF_MIME_TYPE
+            && $this->getFileId($entityFile) !== null
+            && extension_loaded("imagick");
+    }
+
+    /**
+     * Image of the first page of a PDF file, generated the first time and kept in the storage.
+     * Ghostscript reads the PDF: keep it up to date, it runs with -dSAFER by default (9.50+).
+     *
+     * @return string|null JPEG contents, null if the file has no thumbnail or it could not be generated
+     */
+    public function getThumbnail(EntityFileInterface $entityFile): ?string
+    {
+        if (!$this->canThumbnail($entityFile)) {
+            return null;
+        }
+
+        $path = $this->getThumbnailPath($entityFile);
+
+        if ($this->storage->fileExists($path)) {
+            return $this->storage->read($path);
+        }
+
+        $pdfPath = tempnam(sys_get_temp_dir(), "lle_entity_file_");
+
+        if ($pdfPath === false) {
+            return null;
+        }
+
+        try {
+            file_put_contents($pdfPath, $this->readStream($entityFile));
+
+            $image = new \Imagick();
+            $image->setResolution(72, 72);
+            // First page only, without loading the others
+            $image->readImage("pdf:" . $pdfPath . "[0]");
+            $image->setImageBackgroundColor("white");
+            $image = $image->mergeImageLayers(\Imagick::LAYERMETHOD_FLATTEN);
+            $image->thumbnailImage(self::THUMBNAIL_WIDTH, 0);
+            $image->setImageFormat("jpeg");
+            $image->setImageCompressionQuality(self::THUMBNAIL_QUALITY);
+            $thumbnail = $image->getImageBlob();
+        } catch (\ImagickException) {
+            return null;
+        } finally {
+            unlink($pdfPath);
+        }
+
+        $this->storage->write($path, $thumbnail);
+
+        return $thumbnail;
+    }
+
+    /**
+     * Deletes the stored file, its thumbnail and its public link, and removes the EntityFile (no flush).
+     */
+    private function removeFile(EntityFileInterface $entityFile): void
+    {
+        $this->storage->delete($this->configName . "/" . $entityFile->getPath());
+        $this->deleteThumbnail($entityFile);
+
+        $fileId = $this->getFileId($entityFile);
+        if ($fileId !== null) {
+            $links = $this->em->getRepository(EntityFilePublicLink::class)->findBy([
+                "configName" => $this->configName,
+                "fileId" => $fileId,
+            ]);
+            foreach ($links as $link) {
+                $this->em->remove($link);
+            }
+        }
+
+        $this->em->remove($entityFile);
+    }
+
+    private function deleteThumbnail(EntityFileInterface $entityFile): void
+    {
+        if ($this->getFileId($entityFile) !== null && $this->storage->fileExists($this->getThumbnailPath($entityFile))) {
+            $this->storage->delete($this->getThumbnailPath($entityFile));
+        }
+    }
+
+    /**
+     * By id, not by path: renaming a file (move()) keeps its thumbnail.
+     */
+    private function getThumbnailPath(EntityFileInterface $entityFile): string
+    {
+        return $this->configName . "/" . self::THUMBNAIL_DIRECTORY . "/" . $this->getFileId($entityFile) . ".jpg";
+    }
+
+    /**
+     * @return int|null null for a file not saved yet
+     */
+    private function getFileId(EntityFileInterface $entityFile): ?int
+    {
+        try {
+            $id = method_exists($entityFile, "getId") ? $entityFile->getId() : null;
+        } catch (\Error) {
+            // A file class declaring "private ?int $id;" without default, read before the first flush
+            return null;
+        }
+
+        return is_int($id) ? $id : null;
     }
 
     private function checkFolders(): void

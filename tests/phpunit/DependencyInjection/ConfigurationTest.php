@@ -109,6 +109,15 @@ class ConfigurationTest extends TestCase
         self::assertSame("ROLE_ADMIN", $config["role_delete"]);
     }
 
+    public function testPublicLinksAndThumbnailsAreDisabledByDefault(): void
+    {
+        $config = $this->process([]);
+
+        self::assertFalse($config["public_links"]);
+        self::assertSame("ROLE_USER", $config["role_public_link"]);
+        self::assertFalse($config["thumbnails"]);
+    }
+
     public function testFoldersAreDisabledByDefault(): void
     {
         $config = $this->process([]);

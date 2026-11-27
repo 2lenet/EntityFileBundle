@@ -18,3 +18,7 @@ services:
             - '@security.helper'
 
     Lle\EntityFileBundle\Service\EntityFileListing: ~
+
+    Lle\EntityFileBundle\Service\EntityFilePublicLinkResolver: ~
+
+    Lle\EntityFileBundle\Service\EntityFileStreamer: ~

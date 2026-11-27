@@ -1,6 +1,7 @@
 import Dropzone from "dropzone";
 import previewTemplate from "./preview-template.html";
 import {initFolders} from "./folders";
+import {decorate, FILE_FIELDS} from "./files";
 import fr from "./i18n/fr.json";
 import en from "./i18n/en.json";
 
@@ -24,8 +25,12 @@ onLoad(() => {
             default:
                 allMessages = en;
         }
-        // "folders" holds the messages of the folders, the other keys are Dropzone options
-        let {folders: folderMessages, ...messages} = allMessages;
+        // "folders" and "files" hold the messages of the bundle, the other keys are Dropzone options
+        let {folders: folderMessages, files: fileMessages, ...messages} = allMessages;
+        let buttonMessages = {...fileMessages, dictRemoveFile: messages.dictRemoveFile, dictDownloadFile: messages.dictDownloadFile};
+
+        let listing = form.dataset.listing ? JSON.parse(form.dataset.listing) : null;
+        let decorateFile = (file) => decorate(file, listing, buttonMessages);
 
         let options = {
             ...messages,
@@ -34,21 +39,11 @@ onLoad(() => {
             maxFilesize: 2048,
             // only a convenience, the server checks the type
             acceptedFiles: form.dataset.acceptedFiles || null,
+            // override default function to disable thumbnails for non image files
             thumbnail: function (file, dataUrl) {
-
-                for (let node of file.previewElement.querySelectorAll("[data-dz-remove]")) {
-                    node.title = messages.dictRemoveFile;
-                }
-                for (let node of file.previewElement.querySelectorAll("[data-dz-download]")) {
-                    node.title = messages.dictDownloadFile;
-                    node.href = file.url;
-                    node.download = file.path;
-                }
-
-                // override default function to disable thumbnails for non image files
-                if (!file.disablePreview && file.previewElement) {
+                if (!file.disablePreview && file.previewElement && dataUrl) {
                     file.previewElement.classList.remove("dz-file-preview");
-                    for (let thumbnailElement of file.previewElement.querySelectorAll("[data-dz-thumbnail]")){
+                    for (let thumbnailElement of file.previewElement.querySelectorAll("[data-dz-thumbnail]")) {
                         thumbnailElement.alt = file.name;
                         thumbnailElement.src = dataUrl;
                     }
@@ -60,6 +55,9 @@ onLoad(() => {
 
         let dropzone = new Dropzone(form, options);
 
+        // icon of the type while uploading
+        dropzone.on("addedfile", decorateFile);
+
         // handle file deletion
         dropzone.on("removedfile", file => {
             if (file.deleteUrl) {
@@ -69,32 +67,31 @@ onLoad(() => {
             }
         });
 
-        // update delete & download url after adding a file
+        // urls of the buttons after adding a file
         dropzone.on("success", (file, responseData) => {
-            file.url = responseData.url;
-            file.deleteUrl = responseData.deleteUrl;
-
-            for (let node of file.previewElement.querySelectorAll("[data-dz-download]")) {
-                node.href = responseData.deleteUrl;
-                node.download = file.name;
+            for (let field of FILE_FIELDS) {
+                file[field] = responseData[field];
             }
+            decorateFile(file);
         });
 
-        let listing = form.dataset.listing ? JSON.parse(form.dataset.listing) : null;
+        // https://github.com/dropzone/dropzone/discussions/1909
+        let showExistingFile = (file) => {
+            dropzone.displayExistingFile(file, file.url, null, null, file.resizeThumbnail);
+            dropzone.files.push(file);
+            decorateFile(file);
+        };
+
         let folderContainer = document.querySelector('.lle-entity-folders[data-dropzone="' + form.id + '"]');
 
         if (listing && listing.foldersEnabled && folderContainer) {
             // displays the files of the current folder only
-            initFolders(folderContainer, dropzone, listing, folderMessages);
+            initFolders(folderContainer, dropzone, listing, folderMessages, showExistingFile);
             return;
         }
 
-        let existingFiles = JSON.parse(form.dataset.files);
-
-        // https://github.com/dropzone/dropzone/discussions/1909
-        for (let file of existingFiles) {
-            dropzone.displayExistingFile(file, file.url, null, null, file.resizeThumbnail);
-            dropzone.files.push(file);
+        for (let file of JSON.parse(form.dataset.files)) {
+            showExistingFile(file);
         }
     });
 });

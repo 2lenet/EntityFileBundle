@@ -13,7 +13,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -25,7 +24,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[Route("/lle-entity-file/{configName}/{id}")]
 class EntityFileFolderController extends AbstractController
 {
-    public const CSRF_HEADER = "X-CSRF-Token";
+    use EntityRequestTrait;
+
     public const PARAMETER_NAME = "name";
     public const PARAMETER_PARENT = "parent";
     public const PARAMETER_FOLDER = "folder";
@@ -104,31 +104,14 @@ class EntityFileFolderController extends AbstractController
     }
 
     /**
-     * Checks the configuration, the entity, the role and the CSRF token.
-     *
      * @return array{EntityFileManager, object}
      */
     private function load(string $configName, mixed $id, Request $request, string $roleKey): array
     {
-        $manager = $this->entityFileLoader->get($configName);
+        [$manager, $entity] = $this->loadEntity($configName, $id, $request, $roleKey);
 
         if (!$manager->hasFolders()) {
             throw $this->createNotFoundException();
-        }
-
-        /** @var class-string $entityClass */
-        $entityClass = $manager->getConfig()["class"];
-        $entity = $this->em->find($entityClass, $id);
-
-        if ($entity === null) {
-            throw $this->createNotFoundException();
-        }
-
-        $this->denyAccessUnlessGranted($manager->getConfig()[$roleKey], $entity);
-
-        $token = new CsrfToken(EntityFileListing::CSRF_TOKEN_ID, $request->headers->get(self::CSRF_HEADER));
-        if ($this->csrfTokenManager !== null && !$this->csrfTokenManager->isTokenValid($token)) {
-            throw $this->createAccessDeniedException("Invalid CSRF token.");
         }
 
         return [$manager, $entity];

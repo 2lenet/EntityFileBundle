@@ -24,5 +24,12 @@
         "cancel": "Annuler",
         "uploadInProgress": "Un envoi est en cours, attendez sa fin pour changer de dossier.",
         "error": "Une erreur est survenue."
+    },
+    "files": {
+        "preview": "Aperçu",
+        "close": "Fermer",
+        "copyLink": "Copier le lien public",
+        "linkCopied": "Lien copié",
+        "copyError": "Impossible de copier le lien"
     }
 }

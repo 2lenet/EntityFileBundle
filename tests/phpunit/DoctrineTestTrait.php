@@ -67,11 +67,15 @@ trait DoctrineTestTrait
             "entity_file_class" => FolderedFile::class,
             "folders" => true,
             "default_folders" => self::DEFAULT_FOLDERS,
+            "public_links" => true,
+            "thumbnails" => true,
         ];
         $flat = [
             "entity_file_class" => EntityFile::class,
             "folders" => false,
             "default_folders" => [],
+            "public_links" => false,
+            "thumbnails" => false,
         ];
         $common = [
             "class" => Document::class,
@@ -79,6 +83,7 @@ trait DoctrineTestTrait
             "role" => "ROLE_READ",
             "role_write" => "ROLE_WRITE",
             "role_delete" => "ROLE_DELETE",
+            "role_public_link" => "ROLE_SHARE",
             "disposition" => "inline",
             "included_mime_types" => [],
             "excluded_mime_types" => [],
