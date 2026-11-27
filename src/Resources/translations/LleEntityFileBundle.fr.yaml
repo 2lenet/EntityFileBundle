@@ -1,2 +1,8 @@
 "This file type is not accepted. Accepted extensions: %extensions%.": "Ce type de fichier n'est pas accepté. Extensions acceptées : %extensions%."
 "This file type is not accepted.": "Ce type de fichier n'est pas accepté."
+"Folders are not enabled for this configuration.": "Les dossiers ne sont pas activés pour cette configuration."
+"This folder name is not valid.": "Ce nom de dossier n'est pas valide."
+"A folder with this name already exists here.": "Un dossier de ce nom existe déjà ici."
+"This folder does not belong to this entity.": "Ce dossier n'appartient pas à cette fiche."
+"A folder cannot be moved into itself or one of its subfolders.": "Un dossier ne peut pas être déplacé dans lui-même ni dans un de ses sous-dossiers."
+"This folder is not empty.": "Ce dossier n'est pas vide."

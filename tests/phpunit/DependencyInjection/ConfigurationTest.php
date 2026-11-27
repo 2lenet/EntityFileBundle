@@ -3,6 +3,8 @@
 namespace Lle\EntityFileBundle\Tests\DependencyInjection;
 
 use Lle\EntityFileBundle\DependencyInjection\Configuration;
+use Lle\EntityFileBundle\Entity\FolderAwareEntityFileInterface;
+use Lle\EntityFileBundle\Tests\Fixtures\FolderedFile;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -105,6 +107,42 @@ class ConfigurationTest extends TestCase
         self::assertSame("ROLE_USER", $config["role"]);
         self::assertSame("ROLE_EDITOR", $config["role_write"]);
         self::assertSame("ROLE_ADMIN", $config["role_delete"]);
+    }
+
+    public function testFoldersAreDisabledByDefault(): void
+    {
+        $config = $this->process([]);
+
+        self::assertFalse($config["folders"]);
+        self::assertSame([], $config["default_folders"]);
+    }
+
+    public function testFoldersNeedAFolderAwareFileClass(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage(FolderAwareEntityFileInterface::class);
+
+        $this->process(["folders" => true]);
+    }
+
+    public function testFoldersWithAFolderAwareFileClass(): void
+    {
+        $config = $this->process([
+            "entity_file_class" => FolderedFile::class,
+            "folders" => true,
+            "default_folders" => ["Contracts", "Offers"],
+        ]);
+
+        self::assertTrue($config["folders"]);
+        self::assertSame(["Contracts", "Offers"], $config["default_folders"]);
+    }
+
+    public function testDefaultFoldersNeedFolders(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage("default_folders");
+
+        $this->process(["entity_file_class" => FolderedFile::class, "default_folders" => ["Contracts"]]);
     }
 
     /**

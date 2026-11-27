@@ -16,3 +16,5 @@ services:
             - '@doctrine.orm.entity_manager'
             - '@router.default'
             - '@security.helper'
+
+    Lle\EntityFileBundle\Service\EntityFileListing: ~

@@ -4,6 +4,7 @@ namespace Lle\EntityFileBundle\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Lle\EntityFileBundle\Entity\EntityFileInterface;
+use Lle\EntityFileBundle\Service\EntityFileListing;
 use Lle\EntityFileBundle\Service\EntityFileLoader;
 use Lle\EntityFileBundle\Service\EntityFileManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -28,6 +29,7 @@ class EntityFileController extends AbstractController
     public function __construct(
         private EntityManagerInterface $em,
         private EntityFileLoader $entityFileLoader,
+        private EntityFileListing $listing,
         private ?TranslatorInterface $translator = null,
     )
     {
@@ -208,32 +210,21 @@ class EntityFileController extends AbstractController
             }
 
             $path = $file->getClientOriginalName();
+            $folder = null;
 
-            $entityFile = $manager->save($entity, $file, $path);
+            // Configurations with folders: the folder the file is dropped in, empty for the root
+            $folderId = $request->request->get(EntityFileFolderController::PARAMETER_FOLDER);
+            if ($manager->hasFolders() && $folderId !== null && $folderId !== "") {
+                $folder = $manager->getFolder($entity, (int)$folderId) ?? throw $this->createNotFoundException();
+            }
+
+            $entityFile = $manager->save($entity, $file, $path, $folder);
             $entityFile->setName($file->getClientOriginalName());
 
             $this->em->persist($entityFile);
             $this->em->flush();
 
-            $url = $this->generateUrl("lle_entityfile_entityfile_readbypath", [
-                "configName" => $configName,
-                "path" => $entityFile->getPath(),
-            ]);
-            $deleteUrl = $this->generateUrl("lle_entityfile_entityfile_deletebypath", [
-                "configName" => $configName,
-                "path" => $entityFile->getPath(),
-            ]);
-            $isImage = str_starts_with((string)$entityFile->getMimeType(), "image/");
-
-            return new JsonResponse([
-                "url" => $url,
-                "deleteUrl" => $deleteUrl,
-                "name" => $entityFile->getName(),
-                "path" => $entityFile->getPath(),
-                "size" => $entityFile->getSize(),
-                "resizeThumbnail" => $isImage,
-                "disablePreview" => !$isImage,
-            ]);
+            return new JsonResponse($this->listing->getFileRow($configName, $entityFile));
         }
 
         return new Response(null, 400);

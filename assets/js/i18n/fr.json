@@ -11,5 +11,18 @@
     "dictRemoveFile": "Supprimer",
     "dictRemoveFileConfirmation": "Voulez-vous vraiment supprimer ce fichier ?",
     "dictMaxFilesExceeded": "Nombre maximal de fichiers atteint",
-    "dictDownloadFile": "Télécharger"
+    "dictDownloadFile": "Télécharger",
+    "folders": {
+        "root": "Documents",
+        "newFolder": "Nouveau dossier",
+        "folderName": "Nom du dossier",
+        "rename": "Renommer",
+        "deleteFolder": "Supprimer le dossier",
+        "confirmDelete": "Confirmer la suppression",
+        "confirmDeleteContents": "Supprimer avec tout son contenu ?",
+        "save": "Valider",
+        "cancel": "Annuler",
+        "uploadInProgress": "Un envoi est en cours, attendez sa fin pour changer de dossier.",
+        "error": "Une erreur est survenue."
+    }
 }
