@@ -302,6 +302,81 @@ $this->em->flush();
 
 > :warning: **Never forget to flush the EntityFile.**
 
+### Folders
+
+The files of a configuration can be sorted in folders and subfolders. Folders only exist in the database
+(table `lle_entity_file_folder`): renaming or moving a folder does not move the stored files.
+
+Folders need a file class with a `folder` relation. Declare one in your project, with its own table:
+
+```php
+#[ORM\Entity]
+class ContractFile implements FolderAwareEntityFileInterface
+{
+    use EntityFileTrait;
+    use EntityFileFolderTrait;
+    use TimestampableEntity;
+    use BlameableEntity;
+
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: "integer")]
+    private ?int $id = null;
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+}
+```
+
+```yaml
+contracts:
+    class: App\Entity\Customer
+    entity_file_class: App\Entity\ContractFile
+    folders: true
+    # optional, root folders created for every entity
+    default_folders: ["Contracts", "Offers"]
+```
+
+`folders: true` with a file class that does not implement `FolderAwareEntityFileInterface` throws an
+`InvalidConfigurationException`. Without `folders`, nothing changes: the default `EntityFile` has no folder.
+
+```php
+$manager = $entityFileLoader->get("contracts");
+
+$contracts = $manager->createFolder($customer, "Contracts");     // persisted, not flushed
+$year = $manager->createFolder($customer, "2026", $contracts);
+$file = $manager->save($customer, $data, "contract.pdf", $year);
+$this->em->persist($file);
+$this->em->flush();
+
+$manager->getFolders($customer);            // every folder, sorted by name
+$manager->getFiles($customer, $year);       // files directly in a folder, null for the root
+$manager->get($customer);                   // every file, whatever its folder
+
+$manager->renameFolder($year, "2027");      // flush to save
+$manager->moveFolder($year, null);          // to the root, flush to save
+$manager->moveToFolder($file, $contracts);  // flush to save
+$manager->deleteFolder($contracts);         // refused if not empty, flushes
+$manager->deleteFolder($contracts, true);   // with its subfolders and files (stored files included)
+```
+
+A refused operation (invalid or duplicate name, folder moved into itself, folder of another entity...) throws an
+`EntityFileFolderException`, whose message is a translation key of the `LleEntityFileBundle` domain.
+
+The Crudit brick then shows a breadcrumb, the folders of the current folder, and only the files of the current folder.
+Files dropped in the dropzone go to the current folder; files and folders are moved by dragging them onto a folder
+or onto the breadcrumb. Creating, renaming and moving need `role_write`, deleting needs `role_delete`, both checked
+against the entity. When `symfony/security-csrf` is installed, the folder routes also check a CSRF token
+(header `X-CSRF-Token`, token id `lle_entity_file`).
+
+#### Upgrade to 1.4
+
+The bundle maps a new entity, `EntityFileFolder`: generate a migration (`bin/console make:migration`), even if you do
+not use folders, or `doctrine:schema:validate` reports the missing table `lle_entity_file_folder`.
+The `lle_entity_file` table does not change.
+
 ### Exception handling
 
 https://flysystem.thephpleague.com/docs/usage/exception-handling/

@@ -5,7 +5,10 @@ namespace Lle\EntityFileBundle\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use League\Flysystem\FilesystemOperator;
 use Lle\EntityFileBundle\DependencyInjection\Configuration;
+use Lle\EntityFileBundle\Entity\EntityFileFolder;
 use Lle\EntityFileBundle\Entity\EntityFileInterface;
+use Lle\EntityFileBundle\Entity\FolderAwareEntityFileInterface;
+use Lle\EntityFileBundle\Exception\EntityFileFolderException;
 use Lle\EntityFileBundle\Exception\EntityFileException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\DependencyInjection\ServiceLocator;
@@ -62,7 +65,7 @@ class EntityFileManager
         $result = $this->em->getRepository($entityClass)
             ->findBy([
                 "configName" => $this->configName,
-                "entityId" => method_exists($entity, 'getId') ? $entity->getId() : null,
+                "entityId" => $this->getEntityId($entity),
             ]);
 
         return $result;
@@ -84,7 +87,7 @@ class EntityFileManager
         $result = $this->em->getRepository($entityClass)
             ->findOneBy([
                 "configName" => $this->configName,
-                "entityId" => method_exists($entity, 'getId') ? $entity->getId() : null,
+                "entityId" => $this->getEntityId($entity),
             ]);
 
         return $result;
@@ -114,11 +117,12 @@ class EntityFileManager
      * @param object $entity entity to link to the file
      * @param resource|File|string $data file contents
      * @param string $name name of the file
+     * @param EntityFileFolder|null $folder folder of the file, null for the root (configurations with folders only)
      * @return EntityFileInterface the new EntityFile
      */
-    public function save(object $entity, $data, string $name): EntityFileInterface
+    public function save(object $entity, $data, string $name, ?EntityFileFolder $folder = null): EntityFileInterface
     {
-        $entityFile = $this->create($entity, $name);
+        $entityFile = $this->create($entity, $name, $folder);
         $this->write($entityFile, $data);
 
         return $entityFile;
@@ -160,18 +164,23 @@ class EntityFileManager
      *
      * @param object $entity entity to link to the file
      * @param string $name name of the file
+     * @param EntityFileFolder|null $folder folder of the file, null for the root (configurations with folders only)
      * @return EntityFileInterface the new EntityFile
      */
-    public function create(object $entity, string $name): EntityFileInterface
+    public function create(object $entity, string $name, ?EntityFileFolder $folder = null): EntityFileInterface
     {
         /** @var EntityFileInterface $entityFile */
         $entityFile = new $this->config["entity_file_class"]();
 
         $entityFile
-            ->setEntityId(method_exists($entity, 'getId') ? $entity->getId() : null)
+            ->setEntityId($this->getEntityId($entity))
             ->setConfigName($this->configName)
             ->setName($name)
             ->setPath(time() . "_" . $name);
+
+        if ($folder !== null) {
+            $this->moveToFolder($entityFile, $folder);
+        }
 
         return $entityFile;
     }
@@ -329,6 +338,326 @@ class EntityFileManager
     private function getExtension(File $file): string
     {
         return strtolower($file instanceof UploadedFile ? $file->getClientOriginalExtension() : $file->getExtension());
+    }
+
+    /**
+     * @return bool true if the files of this configuration can be sorted in folders ("folders" option)
+     */
+    public function hasFolders(): bool
+    {
+        return (bool)($this->config["folders"] ?? false);
+    }
+
+    /**
+     * Retrieve all the folders of one entity, whatever their depth, sorted by name.
+     *
+     * @param object $entity the entity to search for
+     * @return EntityFileFolder[]
+     */
+    public function getFolders(object $entity): array
+    {
+        return $this->em->getRepository(EntityFileFolder::class)->findBy([
+            "configName" => $this->configName,
+            "entityId" => $this->getEntityId($entity),
+        ], ["name" => "ASC", "id" => "ASC"]);
+    }
+
+    /**
+     * Retrieve one folder of one entity.
+     *
+     * @param object $entity the entity the folder must belong to
+     * @param int $id id of the folder
+     * @return EntityFileFolder|null null if there is no such folder for this entity in this configuration
+     */
+    public function getFolder(object $entity, int $id): ?EntityFileFolder
+    {
+        return $this->em->getRepository(EntityFileFolder::class)->findOneBy([
+            "id" => $id,
+            "configName" => $this->configName,
+            "entityId" => $this->getEntityId($entity),
+        ]);
+    }
+
+    /**
+     * Retrieve one file of one entity.
+     *
+     * @param object $entity the entity the file must belong to
+     * @param int $id id of the file
+     * @return EntityFileInterface|null null if there is no such file for this entity in this configuration
+     */
+    public function getFile(object $entity, int $id): ?EntityFileInterface
+    {
+        /** @var class-string $entityClass */
+        $entityClass = $this->config["entity_file_class"];
+
+        /** @var EntityFileInterface|null $result */
+        $result = $this->em->getRepository($entityClass)->findOneBy([
+            "id" => $id,
+            "configName" => $this->configName,
+            "entityId" => $this->getEntityId($entity),
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * Retrieve the files of one entity directly in one folder (not in its subfolders).
+     *
+     * @param object $entity the entity to search for
+     * @param EntityFileFolder|null $folder the folder, null for the root
+     * @return EntityFileInterface[]
+     */
+    public function getFiles(object $entity, ?EntityFileFolder $folder): array
+    {
+        $this->checkFolders();
+
+        /** @var class-string $entityClass */
+        $entityClass = $this->config["entity_file_class"];
+
+        /** @var EntityFileInterface[] $result */
+        $result = $this->em->getRepository($entityClass)->findBy([
+            "configName" => $this->configName,
+            "entityId" => $this->getEntityId($entity),
+            "folder" => $folder,
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * Create a folder. It is persisted, flush to save it.
+     *
+     * @param object $entity entity to link to the folder
+     * @param string $name name of the folder, trimmed
+     * @param EntityFileFolder|null $parent parent folder, null for the root
+     * @return EntityFileFolder the new folder
+     * @throws EntityFileFolderException if the name is not valid or already used in the parent
+     */
+    public function createFolder(object $entity, string $name, ?EntityFileFolder $parent = null): EntityFileFolder
+    {
+        $this->checkFolders();
+
+        $folder = (new EntityFileFolder())
+            ->setConfigName($this->configName)
+            ->setEntityId($this->getEntityId($entity));
+
+        if ($parent !== null) {
+            $this->checkOwner($parent, $folder->getEntityId());
+        }
+
+        $name = $this->checkName($name);
+        $this->checkUniqueName($folder, $name, $parent);
+
+        $folder->setName($name)->setParent($parent);
+        $this->em->persist($folder);
+
+        return $folder;
+    }
+
+    /**
+     * Create the missing "default_folders" at the root of an entity, and flush if any was created.
+     *
+     * @param object $entity the entity
+     * @return void
+     */
+    public function ensureDefaultFolders(object $entity): void
+    {
+        /** @var string[] $names */
+        $names = $this->config["default_folders"] ?? [];
+
+        if (!$this->hasFolders() || $names === []) {
+            return;
+        }
+
+        $existing = [];
+        foreach ($this->getFolders($entity) as $folder) {
+            if ($folder->getParent() === null) {
+                $existing[] = $folder->getName();
+            }
+        }
+
+        $created = false;
+        foreach ($names as $name) {
+            if (!in_array(trim($name), $existing, true)) {
+                $this->createFolder($entity, $name);
+                $created = true;
+            }
+        }
+
+        if ($created) {
+            $this->em->flush();
+        }
+    }
+
+    /**
+     * Rename a folder, flush to save it.
+     *
+     * @param EntityFileFolder $folder the folder
+     * @param string $name the new name, trimmed
+     * @return void
+     * @throws EntityFileFolderException if the name is not valid or already used in the parent
+     */
+    public function renameFolder(EntityFileFolder $folder, string $name): void
+    {
+        $this->checkFolders();
+        $this->checkOwner($folder, $folder->getEntityId());
+
+        $name = $this->checkName($name);
+        $this->checkUniqueName($folder, $name, $folder->getParent());
+
+        $folder->setName($name);
+    }
+
+    /**
+     * Move a folder with its contents, flush to save it.
+     *
+     * @param EntityFileFolder $folder the folder
+     * @param EntityFileFolder|null $parent the new parent, null for the root
+     * @return void
+     * @throws EntityFileFolderException if the parent is the folder itself or one of its subfolders,
+     *     or already holds a folder of this name
+     */
+    public function moveFolder(EntityFileFolder $folder, ?EntityFileFolder $parent): void
+    {
+        $this->checkFolders();
+        $this->checkOwner($folder, $folder->getEntityId());
+
+        if ($parent !== null) {
+            $this->checkOwner($parent, $folder->getEntityId());
+
+            if ($parent->isIn($folder)) {
+                throw new EntityFileFolderException(EntityFileFolderException::INVALID_MOVE);
+            }
+        }
+
+        $this->checkUniqueName($folder, (string)$folder->getName(), $parent);
+
+        $folder->setParent($parent);
+    }
+
+    /**
+     * Delete a folder. Like delete(), it flushes.
+     *
+     * @param EntityFileFolder $folder the folder
+     * @param bool $recursive also delete its subfolders and files (stored files included)
+     * @return void
+     * @throws EntityFileFolderException if the folder is not empty and $recursive is false
+     */
+    public function deleteFolder(EntityFileFolder $folder, bool $recursive = false): void
+    {
+        $this->checkFolders();
+        $this->checkOwner($folder, $folder->getEntityId());
+
+        // Every folder of the entity, to find the subfolders without a query per level
+        $subfolders = array_values(array_filter(
+            $this->em->getRepository(EntityFileFolder::class)->findBy([
+                "configName" => $this->configName,
+                "entityId" => $folder->getEntityId(),
+            ]),
+            fn (EntityFileFolder $candidate) => $candidate !== $folder && $candidate->isIn($folder),
+        ));
+        $folders = [$folder, ...$subfolders];
+
+        /** @var class-string $entityClass */
+        $entityClass = $this->config["entity_file_class"];
+
+        /** @var EntityFileInterface[] $files */
+        $files = $this->em->getRepository($entityClass)->findBy(["folder" => $folders]);
+
+        if (!$recursive && ($subfolders !== [] || $files !== [])) {
+            throw new EntityFileFolderException(EntityFileFolderException::NOT_EMPTY);
+        }
+
+        foreach ($files as $file) {
+            $this->storage->delete($this->configName . "/" . $file->getPath());
+            $this->em->remove($file);
+        }
+
+        // Deepest first, so that no folder is removed before its subfolders
+        usort($folders, fn (EntityFileFolder $first, EntityFileFolder $second)
+            => count($second->getPath()) <=> count($first->getPath()));
+
+        foreach ($folders as $removed) {
+            $this->em->remove($removed);
+        }
+
+        $this->em->flush();
+    }
+
+    /**
+     * Move a file to a folder, flush to save it. The stored file does not move.
+     *
+     * @param EntityFileInterface $entityFile the file
+     * @param EntityFileFolder|null $folder the folder, null for the root
+     * @return void
+     * @throws EntityFileFolderException if the folder belongs to another entity
+     */
+    public function moveToFolder(EntityFileInterface $entityFile, ?EntityFileFolder $folder): void
+    {
+        $this->checkFolders();
+
+        if (!$entityFile instanceof FolderAwareEntityFileInterface) {
+            throw new EntityFileFolderException(EntityFileFolderException::FOLDERS_DISABLED);
+        }
+
+        if ($folder !== null) {
+            $this->checkOwner($folder, $entityFile->getEntityId());
+        }
+
+        $entityFile->setFolder($folder);
+    }
+
+    private function checkFolders(): void
+    {
+        if (!$this->hasFolders()) {
+            throw new EntityFileFolderException(EntityFileFolderException::FOLDERS_DISABLED);
+        }
+    }
+
+    private function checkOwner(EntityFileFolder $folder, mixed $entityId): void
+    {
+        if ($folder->getConfigName() !== $this->configName || $folder->getEntityId() !== $entityId) {
+            throw new EntityFileFolderException(EntityFileFolderException::FOREIGN_FOLDER);
+        }
+    }
+
+    /**
+     * @return string the trimmed name
+     */
+    private function checkName(string $name): string
+    {
+        $name = trim($name);
+
+        if (
+            $name === ""
+            || $name === "."
+            || $name === ".."
+            || strpbrk($name, "/\\") !== false
+            || mb_strlen($name) > EntityFileFolder::NAME_MAX_LENGTH
+        ) {
+            throw new EntityFileFolderException(EntityFileFolderException::INVALID_NAME);
+        }
+
+        return $name;
+    }
+
+    private function checkUniqueName(EntityFileFolder $folder, string $name, ?EntityFileFolder $parent): void
+    {
+        $sibling = $this->em->getRepository(EntityFileFolder::class)->findOneBy([
+            "configName" => $this->configName,
+            "entityId" => $folder->getEntityId(),
+            "parent" => $parent,
+            "name" => $name,
+        ]);
+
+        if ($sibling !== null && $sibling !== $folder) {
+            throw new EntityFileFolderException(EntityFileFolderException::DUPLICATE_NAME);
+        }
+    }
+
+    private function getEntityId(object $entity): mixed
+    {
+        return method_exists($entity, "getId") ? $entity->getId() : null;
     }
 
     protected function getStorage(string $configName): FilesystemOperator

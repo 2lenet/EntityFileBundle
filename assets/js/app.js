@@ -1,5 +1,6 @@
 import Dropzone from "dropzone";
 import previewTemplate from "./preview-template.html";
+import {initFolders} from "./folders";
 import fr from "./i18n/fr.json";
 import en from "./i18n/en.json";
 
@@ -15,14 +16,16 @@ onLoad(() => {
     document.querySelectorAll(".lle-entity-dropzone").forEach((form) => {
 
         let locale = form.dataset.locale.substring(0, 2);
-        let messages;
+        let allMessages;
         switch (locale) {
             case "fr":
-                messages = fr;
+                allMessages = fr;
                 break;
             default:
-                messages = en;
+                allMessages = en;
         }
+        // "folders" holds the messages of the folders, the other keys are Dropzone options
+        let {folders: folderMessages, ...messages} = allMessages;
 
         let options = {
             ...messages,
@@ -76,6 +79,15 @@ onLoad(() => {
                 node.download = file.name;
             }
         });
+
+        let listing = form.dataset.listing ? JSON.parse(form.dataset.listing) : null;
+        let folderContainer = document.querySelector('.lle-entity-folders[data-dropzone="' + form.id + '"]');
+
+        if (listing && listing.foldersEnabled && folderContainer) {
+            // displays the files of the current folder only
+            initFolders(folderContainer, dropzone, listing, folderMessages);
+            return;
+        }
 
         let existingFiles = JSON.parse(form.dataset.files);
 

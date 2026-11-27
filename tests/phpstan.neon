@@ -16,3 +16,7 @@ parameters:
             identifier: missingType.iterableValue
         -
             identifier: missingType.generics
+        # Extension point for the projects, used by no class of the bundle
+        -
+            identifier: trait.unused
+            path: ../src/Entity/Trait/EntityFileFolderTrait.php
